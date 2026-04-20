@@ -10,10 +10,12 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
     CreateShaders();
     CreateInputLayout();
 
+    CreateTriangleGeometry(1.0f);
+    CreateTriangleGeometry(0.0f);
+
     CreateProjectionMatrix();
     CreateViewMatrix();
     CreateConstantBuffer();
-    CreateTriangleGeometry();
 }
 
 void Renderer::CreateDevice()
@@ -269,20 +271,20 @@ void Renderer::UpdateConstantBuffer()
     );
 }
 
-void Renderer::CreateTriangleGeometry()
+void Renderer::CreateTriangleGeometry(float XOffset)
 {
     VertexData vertices[] =
     {
         //Front Face
-        { XMFLOAT3(-0.5f, 0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left 
-        { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
-        { XMFLOAT3(-0.5f, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
-        { XMFLOAT3(0.5f, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) },  // Blue //Bottom Right
+        { XMFLOAT3(-0.5f + XOffset, 0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left 
+        { XMFLOAT3(0.5f + XOffset,  0.5f, -0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
+        { XMFLOAT3(-0.5f + XOffset, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
+        { XMFLOAT3(0.5f + XOffset, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) },  // Blue //Bottom Right
         //Back Face
-        { XMFLOAT3(-0.5f, 0.5f, 0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left
-        { XMFLOAT3(0.5f,  0.5f, 0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
-        { XMFLOAT3(-0.5f, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
-        { XMFLOAT3(0.5f, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }  // Blue //Bottom Right
+        { XMFLOAT3(-0.5f + XOffset, 0.5f, 0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left
+        { XMFLOAT3(0.5f + XOffset,  0.5f, 0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
+        { XMFLOAT3(-0.5f + XOffset, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
+        { XMFLOAT3(0.5f + XOffset, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }  // Blue //Bottom Right
     };
 
     uint32_t indices[] =
@@ -375,7 +377,6 @@ void Renderer::SetPipelineState()
     viewport.TopLeftY = 0.0f;
 
     mDeviceContext->RSSetViewports(1, &viewport);
-
 }
 
 void Renderer::ClearColor(XMFLOAT4 color)
@@ -392,6 +393,6 @@ void Renderer::RenderFrame()
     UpdateConstantBuffer();
 
     BindGeometry();
-    mDeviceContext->DrawIndexed(36, 0, 0);
+    mDeviceContext->DrawIndexed(72, 0, 0);
     mSwapChain->Present(1, 0);
 }

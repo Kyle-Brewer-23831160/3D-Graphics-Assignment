@@ -44,7 +44,7 @@ private:
     void CreateProjectionMatrix();
     void CreateWorldMatrix(float mAngle);
     void CreateConstantBuffer();
-    void CreateTriangleGeometry();
+    void CreateTriangleGeometry(float XOffset);
 
     // Per-frame bindings
     void SetPipelineState();
