@@ -41,7 +41,6 @@ void Renderer::CreateDevice()
 
 void Renderer::CreateSwapChain()
 {
-    RECT rect{};
     GetClientRect(mHwnd, &rect);
 
     DXGI_SWAP_CHAIN_DESC scd{};
@@ -109,14 +108,19 @@ void Renderer::CreateRenderTargetView()
 void Renderer::CreateShaders()
 {
     ComPtr<ID3DBlob> errorBlob;
-    const std::string pixelShaderCode = R"(
+    const std::string pixelShaderCode  = R"(
 
-                 float4 main() : SV_TARGET
-                  {
-                    return float4(1.0, 0.0, 0.0, 1.0);
-                  }
+    struct PS_INPUT
+    {
+        float4 position : SV_POSITION;
+        float4 color    : COLOR;
+    };
 
-                )";
+    float4 main(PS_INPUT input) : SV_TARGET
+    {
+        return input.color;
+    }
+    )";
 
     D3DCompile(pixelShaderCode.c_str(), pixelShaderCode.length(), nullptr, nullptr, nullptr, "main", "ps_5_0",
         D3DCOMPILE_ENABLE_STRICTNESS, 0, &mVertexShaderBlob, &errorBlob);
@@ -219,11 +223,11 @@ void Renderer::CreateProjectionMatrix()
 void Renderer::CreateWorldMatrix(float mAngle)
 {
     XMMATRIX translation = XMMatrixTranslation(0, 0, 0);
-    XMMATRIX ROTZ = XMMatrixRotationZ(mAngle); // Rotation around Z
-    XMMATRIX ROTY = XMMatrixRotationZ(mAngle); // Rotation around Y
+    XMMATRIX ROTY = XMMatrixRotationY(mAngle); // Rotation around Z
+    //XMMATRIX ROTY = XMMatrixRotationZ(mAngle); // Rotation around Y
     XMMATRIX Scale = XMMatrixScaling(1, 1, 1); //Scaling factor (1,1,1) is no scaling
 
-    mWorld = translation * ROTZ * ROTY * Scale; //replace M world Render object when rendering multiple
+    mWorld = translation/* * ROTZ*/ * ROTY * Scale; //replace M world Render object when rendering multiple
 }
 
 void Renderer::CreateConstantBuffer()
@@ -246,7 +250,7 @@ void Renderer::UpdateConstantBuffer()
     mPreviousTime = CurrentTime;
 
     //----Animation----
-    //mAngle += deltaTime;
+    mAngle += 0.01;
     CreateWorldMatrix(mAngle);
 
     //----Matrices----
@@ -269,21 +273,43 @@ void Renderer::CreateTriangleGeometry()
 {
     VertexData vertices[] =
     {
-        { XMFLOAT3(-0.5f, -0.5f, 0.0f), XMFLOAT4(1, 0, 0, 1) }, // Red
-        { XMFLOAT3(0.0f,  0.5f, 0.0f), XMFLOAT4(0, 1, 0, 1) }, // Green
-        { XMFLOAT3(0.5f, -0.5f, 0.0f), XMFLOAT4(0, 0, 1, 1) }, // Blue
-        { XMFLOAT3(0.5f, -0.5f, 1.0f), XMFLOAT4(0, 0, 1, 1) },  // Blue
-        { XMFLOAT3(-0.5f, -0.5f, 1.0f), XMFLOAT4(1, 0, 0, 1) } // Red
+        //Front Face
+        { XMFLOAT3(-0.5f, 0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left 
+        { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
+        { XMFLOAT3(-0.5f, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
+        { XMFLOAT3(0.5f, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) },  // Blue //Bottom Right
+        //Back Face
+        { XMFLOAT3(-0.5f, 0.5f, 0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left
+        { XMFLOAT3(0.5f,  0.5f, 0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
+        { XMFLOAT3(-0.5f, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
+        { XMFLOAT3(0.5f, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }  // Blue //Bottom Right
     };
 
     uint32_t indices[] =
     {
-        0, 1, 2,
-        2, 1, 3,
-        3, 1, 4,
-        0, 1, 3,
-        0, 2, 3,
-        0, 4, 3
+        // Front Face (Z = 0.0f)
+        0, 2, 1,
+        1, 3, 2,
+
+        // Back Face (Z = 0.5f)
+        4, 6, 5,
+        5, 6, 7,
+
+        // Left Face
+        4, 0, 6,
+        0, 2, 6,
+
+        // Right Face
+        1, 5, 3,
+        5, 7, 3,
+
+        // Top Face
+        4, 5, 0,
+        5, 1, 0,
+
+        // Bottom Face
+        2, 3, 6,
+        3, 7, 6
     };
 
     //VERTEX BUFFER & DATA DESCRIPTION
@@ -301,7 +327,7 @@ void Renderer::CreateTriangleGeometry()
     //INDEX BUFFER & DATA DESCRIPTION
     D3D11_BUFFER_DESC ibDesc{};
     ibDesc.Usage = D3D11_USAGE_DEFAULT;
-    ibDesc.ByteWidth = sizeof(indices);
+    ibDesc.ByteWidth = sizeof(int) * 36;
     ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
     D3D11_SUBRESOURCE_DATA ibData{};
     ibData.pSysMem = indices;
@@ -360,12 +386,12 @@ void Renderer::ClearColor(XMFLOAT4 color)
 
 void Renderer::RenderFrame()
 {
-    ClearColor({ 0.2f, 0.3f, 0.4f, 1.0f });
+    ClearColor({ 0.2f, 0.5f, 0.4f, 1.0f });
 
     SetPipelineState();
     UpdateConstantBuffer();
 
     BindGeometry();
-    mDeviceContext->DrawIndexed(18, 0, 0);
+    mDeviceContext->DrawIndexed(36, 0, 0);
     mSwapChain->Present(1, 0);
 }
