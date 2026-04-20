@@ -244,7 +244,7 @@ void Renderer::CreateConstantBuffer()
     if (FAILED(Result)) OutputDebugString (L"FAILED TO CREATE CONSTANT BUFFER\n"); 
 }
 
-void Renderer::UpdateConstantBuffer()
+void Renderer::UpdateConstantBuffer(XMMATRIX OBJWorldMatrix)
 {
     //----TIME----
     float CurrentTime = GetTickCount64() / 1000.0f;//obtain the elapsed system time and convert into seconds
@@ -256,7 +256,7 @@ void Renderer::UpdateConstantBuffer()
     CreateWorldMatrix(mAngle);
 
     //----Matrices----
-    XMMATRIX wvp = mWorld * mView * mProjection;
+    XMMATRIX wvp = OBJWorldMatrix * mView * mProjection;
 
     //----Update GPU----
     ConstantBuffer CB;
@@ -390,9 +390,18 @@ void Renderer::RenderFrame()
     ClearColor({ 0.2f, 0.5f, 0.4f, 1.0f });
 
     SetPipelineState();
-    UpdateConstantBuffer();
-
     BindGeometry();
-    mDeviceContext->DrawIndexed(72, 0, 0);
+    
+    // --- CUBE 1 ---
+    mAngle += 0.01f; // Update rotation
+    XMMATRIX world1 = XMMatrixRotationY(mAngle) * XMMatrixTranslation(-2.0f, 0.0f, 0.0f);
+    UpdateConstantBuffer(world1);
+    mDeviceContext->DrawIndexed(36, 0, 0); // 36 indices for one cube
+
+    // --- CUBE 2 ---
+    XMMATRIX world2 = XMMatrixRotationX(mAngle) * XMMatrixTranslation(2.0f, 0.0f, 0.0f);
+    UpdateConstantBuffer(world2);
+    mDeviceContext->DrawIndexed(36, 0, 0);
+
     mSwapChain->Present(1, 0);
 }

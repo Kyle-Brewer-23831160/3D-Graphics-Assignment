@@ -48,7 +48,7 @@ private:
 
     // Per-frame bindings
     void SetPipelineState();
-    void UpdateConstantBuffer();
+    void UpdateConstantBuffer(XMMATRIX OBJWorldMatrix);
     void BindGeometry();
 
 public:
