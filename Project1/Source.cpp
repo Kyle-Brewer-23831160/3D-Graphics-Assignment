@@ -4,30 +4,10 @@
 #include"Renderer.h"
 
 using namespace Microsoft;
-struct VertexData
-{
-    XMFLOAT3 position;
-    XMFLOAT4 color;
-};
-
-VertexData vertices[] =
-{
-    { XMFLOAT3(-0.5f, -0.5f, 0.0f), XMFLOAT4(1, 0, 0, 1) }, // Red
-    { XMFLOAT3(0.0f,  0.5f, 0.0f), XMFLOAT4(0, 1, 0, 1) }, // Green
-    { XMFLOAT3(0.5f, -0.5f, 0.0f), XMFLOAT4(0, 0, 1, 1) }  // Blue
-};
-
-
-uint32_t indices[] =
-{
-    0, 1, 2
-};
 
 // Global variables
 HINSTANCE g_hInst;	// current instance
 HWND g_hWnd;		// main window handle
-
-
 
 // Function declarations (included in this C++ file)
 ATOM				MyRegisterClass(HINSTANCE);
@@ -69,47 +49,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     if (!CreateMainWnd(nCmdShow))
         return -1;
 
-    //++++++++++++++++++D3D11+++++++++++++++++++++++++++++ 
     Renderer* basicRenderer = new Renderer(g_hWnd);
-
-    ComPtr<ID3D11Buffer> mVertexBuffer;
-    ComPtr<ID3D11Buffer> mIndexBuffer;
-    UINT  mIndexCount = sizeof(indices) / sizeof(indices[0]);
-
-    D3D11_BUFFER_DESC vbDesc{};
-    vbDesc.Usage = D3D11_USAGE_DEFAULT;
-    vbDesc.ByteWidth = sizeof(vertices);
-    vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    D3D11_SUBRESOURCE_DATA vbData{};
-    vbData.pSysMem = vertices;
-
-    HRESULT hr = basicRenderer->GetDevice()->CreateBuffer(&vbDesc, &vbData, mVertexBuffer.GetAddressOf());
-    if (FAILED(hr))
-        OutputDebugString(L"FAILED: CreateBuffer vertex\n");
-    else
-        OutputDebugString(L"SUCCESS: CreateBuffer vertex\n");
-
-    D3D11_BUFFER_DESC ibDesc{};
-    ibDesc.Usage = D3D11_USAGE_DEFAULT;
-    ibDesc.ByteWidth = sizeof(int) * mIndexCount;
-    ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    D3D11_SUBRESOURCE_DATA ibData{};
-    ibData.pSysMem = indices;
-
-    hr = basicRenderer->GetDevice()->CreateBuffer(&ibDesc, &ibData, mIndexBuffer.GetAddressOf());
-    if (FAILED(hr))
-        OutputDebugString(L"FAILED: CreateBuffer index\n");
-    else
-        OutputDebugString(L"SUCCESS: CreateBuffer index\n");
-
-    UINT stride = sizeof(VertexData);
-    UINT offset = 0;
-
-    ID3D11Buffer* vb = mVertexBuffer.Get();
-    basicRenderer->mDeviceContext->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
-    basicRenderer->mDeviceContext->IASetIndexBuffer(mIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
 
     MSG msg = { 0 }; // Initialise the message structure
     while (msg.message != WM_QUIT)
@@ -120,7 +60,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
 
-        basicRenderer->RenderFrame(mIndexCount);
+        basicRenderer->RenderFrame();
     }
 
     return (int)msg.wParam; // Return the exit code

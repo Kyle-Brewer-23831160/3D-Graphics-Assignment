@@ -2,9 +2,6 @@
 #include "Renderer.h"
 #include <windows.h>
 
-
-
-
 Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
 {
     CreateDevice();
@@ -12,6 +9,11 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
     CreateRenderTargetView();
     CreateShaders();
     CreateInputLayout();
+
+    CreateProjectionMatrix();
+    CreateViewMatrix();
+    CreateConstantBuffer();
+    CreateTriangleGeometry();
 }
 
 void Renderer::CreateDevice()
@@ -135,6 +137,12 @@ void Renderer::CreateShaders()
 
     ComPtr<ID3DBlob> errorBlob1;
     const std::string vertexShaderCode = R"(
+
+                    cbuffer ConstantBuffer : register(b0)
+                    {
+                        matrix WVP;
+                    }
+
                     struct vertexIn
                     {
                         float3 position : POSITION;
@@ -150,7 +158,7 @@ void Renderer::CreateShaders()
                     vertexOut main(vertexIn input)
                     {
                         vertexOut output;
-                        output.position = float4(input.position, 1.0);
+                        output.position = mul(float4(input.position, 1.0f), WVP);
                         output.color = input.color;      
                         return output;
                     }
@@ -175,6 +183,7 @@ void Renderer::CreateShaders()
 
 
 }
+
 void Renderer::CreateInputLayout()
 {
     D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
@@ -185,12 +194,138 @@ void Renderer::CreateInputLayout()
 
 }
 
+void Renderer::CreateViewMatrix()
+{
+    mView = XMMatrixLookAtLH(
+        XMVectorSet(0.0f, 0.0f, -10.0f, 1.0f), //Cam is 10 steps back
+        XMVectorSet(0.0f, 0.0f, 50.0f, 1.0f), 
+        XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f)
+        );
+}
+
+void Renderer::CreateProjectionMatrix()
+{
+    float width = float(rect.right - rect.left);
+    float height = float(rect.bottom - rect.top);
+
+    mProjection = XMMatrixPerspectiveFovLH(
+        XMConvertToRadians(45.0f), //FOV in angle
+        width / height, //Aspect Ratio
+        0.1f, //Near plane
+        1000.0f //Far plane
+    );
+}
+
+void Renderer::CreateWorldMatrix(float mAngle)
+{
+    XMMATRIX translation = XMMatrixTranslation(0, 0, 0);
+    XMMATRIX ROTZ = XMMatrixRotationZ(mAngle); // Rotation around Z
+    XMMATRIX ROTY = XMMatrixRotationZ(mAngle); // Rotation around Y
+    XMMATRIX Scale = XMMatrixScaling(1, 1, 1); //Scaling factor (1,1,1) is no scaling
+
+    mWorld = translation * ROTZ * ROTY * Scale; //replace M world Render object when rendering multiple
+}
+
+void Renderer::CreateConstantBuffer()
+{
+    D3D11_BUFFER_DESC cbd{};
+    cbd.Usage = D3D11_USAGE_DEFAULT;
+    cbd.ByteWidth = sizeof(ConstantBuffer);
+    cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+    HRESULT Result = mDevice->CreateBuffer(&cbd, nullptr, mConstantBuffer.GetAddressOf());
+    
+    if (FAILED(Result)) OutputDebugString (L"FAILED TO CREATE CONSTANT BUFFER\n"); 
+}
+
+void Renderer::UpdateConstantBuffer()
+{
+    //----TIME----
+    float CurrentTime = GetTickCount64() / 1000.0f;//obtain the elapsed system time and convert into seconds
+    float deltaTime = CurrentTime - mPreviousTime;
+    mPreviousTime = CurrentTime;
+
+    //----Animation----
+    //mAngle += deltaTime;
+    CreateWorldMatrix(mAngle);
+
+    //----Matrices----
+    XMMATRIX wvp = mWorld * mView * mProjection;
+
+    //----Update GPU----
+    ConstantBuffer CB;
+    CB.WVP = XMMatrixTranspose(wvp);
+
+    mDeviceContext->UpdateSubresource(mConstantBuffer.Get(),
+        0,
+        nullptr,
+        &CB,
+        0,
+        0
+    );
+}
+
+void Renderer::CreateTriangleGeometry()
+{
+    VertexData vertices[] =
+    {
+        { XMFLOAT3(-0.5f, -0.5f, 0.0f), XMFLOAT4(1, 0, 0, 1) }, // Red
+        { XMFLOAT3(0.0f,  0.5f, 0.0f), XMFLOAT4(0, 1, 0, 1) }, // Green
+        { XMFLOAT3(0.5f, -0.5f, 0.0f), XMFLOAT4(0, 0, 1, 1) }, // Blue
+        { XMFLOAT3(0.5f, -0.5f, 1.0f), XMFLOAT4(0, 0, 1, 1) },  // Blue
+        { XMFLOAT3(-0.5f, -0.5f, 1.0f), XMFLOAT4(1, 0, 0, 1) } // Red
+    };
+
+    uint32_t indices[] =
+    {
+        0, 1, 2,
+        2, 1, 3,
+        3, 1, 4,
+        0, 1, 3,
+        0, 2, 3,
+        0, 4, 3
+    };
+
+    //VERTEX BUFFER & DATA DESCRIPTION
+    D3D11_BUFFER_DESC vbDesc{};
+    vbDesc.Usage = D3D11_USAGE_DEFAULT;
+    vbDesc.ByteWidth = sizeof(vertices);
+    vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    D3D11_SUBRESOURCE_DATA vbData{};
+    vbData.pSysMem = vertices;
+
+    HRESULT Result = mDevice->CreateBuffer(&vbDesc, &vbData, vertexBuffer.GetAddressOf());
+
+    if (FAILED(Result)) (L"FAILED TO CREATE VERTEX BUFFER");
+
+    //INDEX BUFFER & DATA DESCRIPTION
+    D3D11_BUFFER_DESC ibDesc{};
+    ibDesc.Usage = D3D11_USAGE_DEFAULT;
+    ibDesc.ByteWidth = sizeof(indices);
+    ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    D3D11_SUBRESOURCE_DATA ibData{};
+    ibData.pSysMem = indices;
+
+    Result = mDevice->CreateBuffer(&ibDesc, &ibData, IndexBuffer.GetAddressOf());
+
+    if (FAILED(Result)) (L"FAILED TO CREATE INDEX BUFFER");
+}
+
+void Renderer::BindGeometry()
+{
+    UINT stride = sizeof(VertexData);
+    UINT offset = 0;
+
+    mDeviceContext->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
+    mDeviceContext->IASetIndexBuffer(IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+}
 
 void Renderer::SetPipelineState()
 {
     mDeviceContext->OMSetRenderTargets(1, mRenderTargetView.GetAddressOf(), nullptr);
     mDeviceContext->PSSetShader(mPixelShader.Get(), nullptr, 0);
     mDeviceContext->VSSetShader(mVertexShader.Get(), nullptr, 0);
+    mDeviceContext->VSSetConstantBuffers(0, 1, mConstantBuffer.GetAddressOf());
     mDeviceContext->IASetInputLayout(mInputLayout.Get());
 
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
@@ -203,7 +338,6 @@ void Renderer::SetPipelineState()
     mDevice->CreateRasterizerState(&rasterDesc, rasterState.GetAddressOf());
 
     mDeviceContext->RSSetState(rasterState.Get());
-    RECT rect;
     GetClientRect(mHwnd, &rect);
 
     D3D11_VIEWPORT viewport = {};
@@ -224,10 +358,14 @@ void Renderer::ClearColor(XMFLOAT4 color)
     mDeviceContext->ClearRenderTargetView(mRenderTargetView.Get(), clearColor);
 }
 
-void Renderer::RenderFrame(UINT mIndexCount)
+void Renderer::RenderFrame()
 {
     ClearColor({ 0.2f, 0.3f, 0.4f, 1.0f });
+
     SetPipelineState();
-    mDeviceContext->DrawIndexed(3, 0, 0);
+    UpdateConstantBuffer();
+
+    BindGeometry();
+    mDeviceContext->DrawIndexed(18, 0, 0);
     mSwapChain->Present(1, 0);
 }
