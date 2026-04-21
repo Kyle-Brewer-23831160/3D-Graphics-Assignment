@@ -79,7 +79,7 @@ public:
     // Geometry
     std::vector<Mesh, std::allocator<Mesh>> WorldMesh;
     Mesh CUBE1 = Mesh(0, 0, 0, WorldMesh);
-    Mesh CUBE2 = Mesh(1, 0, 0, WorldMesh);
+    Mesh CUBE2 = Mesh(3, 0, 0, WorldMesh);
     Mesh CUBE3 = Mesh(0, 1, 0, WorldMesh);
 
     //Cmaera Matrices

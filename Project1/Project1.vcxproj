@@ -132,12 +132,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="InputDetector.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="PlayerCamera.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="InputDetector.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="PlayerCamera.h" />
     <ClInclude Include="Renderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
