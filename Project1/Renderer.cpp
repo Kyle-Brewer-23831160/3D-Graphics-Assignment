@@ -10,8 +10,9 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
     CreateShaders();
     CreateInputLayout();
 
-    CreateTriangleGeometry(1.0f);
-    CreateTriangleGeometry(0.0f);
+    CreateTriangleGeometry();
+
+    CreateStencilBuffer();
 
     CreateProjectionMatrix();
     CreateViewMatrix();
@@ -271,20 +272,20 @@ void Renderer::UpdateConstantBuffer(XMMATRIX OBJWorldMatrix)
     );
 }
 
-void Renderer::CreateTriangleGeometry(float XOffset)
+void Renderer::CreateTriangleGeometry()
 {
     VertexData vertices[] =
     {
         //Front Face
-        { XMFLOAT3(-0.5f + XOffset, 0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left 
-        { XMFLOAT3(0.5f + XOffset,  0.5f, -0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
-        { XMFLOAT3(-0.5f + XOffset, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
-        { XMFLOAT3(0.5f + XOffset, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) },  // Blue //Bottom Right
+        { XMFLOAT3(-0.5f, 0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left 
+        { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
+        { XMFLOAT3(-0.5f, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
+        { XMFLOAT3(0.5f, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) },  // Blue //Bottom Right
         //Back Face
-        { XMFLOAT3(-0.5f + XOffset, 0.5f, 0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left
-        { XMFLOAT3(0.5f + XOffset,  0.5f, 0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
-        { XMFLOAT3(-0.5f + XOffset, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
-        { XMFLOAT3(0.5f + XOffset, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }  // Blue //Bottom Right
+        { XMFLOAT3(-0.5f, 0.5f, 0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left
+        { XMFLOAT3(0.5f,  0.5f, 0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
+        { XMFLOAT3(-0.5f, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
+        { XMFLOAT3(0.5f, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }  // Blue //Bottom Right
     };
 
     uint32_t indices[] =
@@ -339,6 +340,24 @@ void Renderer::CreateTriangleGeometry(float XOffset)
     if (FAILED(Result)) (L"FAILED TO CREATE INDEX BUFFER");
 }
 
+void Renderer::CreateStencilBuffer()
+{
+    D3D11_TEXTURE2D_DESC depthStencilDesc;
+    depthStencilDesc.Width = 800;
+    depthStencilDesc.Height = 600;
+    depthStencilDesc.MipLevels = 1;
+    depthStencilDesc.ArraySize = 1;
+    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilDesc.SampleDesc.Count = 1;
+    depthStencilDesc.SampleDesc.Quality = 0;
+    depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthStencilDesc.CPUAccessFlags = 0;
+    depthStencilDesc.MiscFlags = 0;
+    mDevice->CreateTexture2D(&depthStencilDesc, NULL, &mdepthStencilBuffer);
+    mDevice->CreateDepthStencilView(mdepthStencilBuffer.Get(), NULL, &mdepthStencilView);
+}
+
 void Renderer::BindGeometry()
 {
     UINT stride = sizeof(VertexData);
@@ -350,7 +369,7 @@ void Renderer::BindGeometry()
 
 void Renderer::SetPipelineState()
 {
-    mDeviceContext->OMSetRenderTargets(1, mRenderTargetView.GetAddressOf(), nullptr);
+    mDeviceContext->OMSetRenderTargets(1, mRenderTargetView.GetAddressOf(), mdepthStencilView.Get());
     mDeviceContext->PSSetShader(mPixelShader.Get(), nullptr, 0);
     mDeviceContext->VSSetShader(mVertexShader.Get(), nullptr, 0);
     mDeviceContext->VSSetConstantBuffers(0, 1, mConstantBuffer.GetAddressOf());
@@ -391,17 +410,15 @@ void Renderer::RenderFrame()
 
     SetPipelineState();
     BindGeometry();
-    
-    // --- CUBE 1 ---
-    mAngle += 0.01f; // Update rotation
-    XMMATRIX world1 = XMMatrixRotationY(mAngle) * XMMatrixTranslation(-2.0f, 0.0f, 0.0f);
-    UpdateConstantBuffer(world1);
-    mDeviceContext->DrawIndexed(36, 0, 0); // 36 indices for one cube
 
-    // --- CUBE 2 ---
-    XMMATRIX world2 = XMMatrixRotationX(mAngle) * XMMatrixTranslation(2.0f, 0.0f, 0.0f);
-    UpdateConstantBuffer(world2);
-    mDeviceContext->DrawIndexed(36, 0, 0);
+    mDeviceContext->ClearDepthStencilView(mdepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0F, 0);
+
+    for (int i = 0; i < WorldMesh.size(); i++)
+    {
+        WorldMesh[i].CreateWorldMatrix(WorldMesh[i].ObjTransform);
+        UpdateConstantBuffer(WorldMesh[i].ReturnMatrix());
+        mDeviceContext->DrawIndexed(36, 0, 0); // 36 indices for one cube
+    }
 
     mSwapChain->Present(1, 0);
 }

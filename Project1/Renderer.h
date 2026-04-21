@@ -1,10 +1,9 @@
 // Renderer.h
 #pragma once
 
+#include "Mesh.h"
 #include <d3d11.h>
 #include <d3dcompiler.h>
-#include <DirectXMath.h>
-#include <wrl.h>
 #include <string>
 
 using namespace Microsoft::WRL;
@@ -44,7 +43,8 @@ private:
     void CreateProjectionMatrix();
     void CreateWorldMatrix(float mAngle);
     void CreateConstantBuffer();
-    void CreateTriangleGeometry(float XOffset);
+    void CreateTriangleGeometry();
+    void CreateStencilBuffer();
 
     // Per-frame bindings
     void SetPipelineState();
@@ -69,13 +69,18 @@ public:
     ComPtr<ID3D11Buffer> mConstantBuffer;
     ComPtr<ID3D11Buffer> vertexBuffer;
     ComPtr<ID3D11Buffer> IndexBuffer;
+    ComPtr<ID3D11Texture2D> mdepthStencilBuffer;
+    ComPtr<ID3D11DepthStencilView> mdepthStencilView;
 
 
     float mPreviousTime;
     float mAngle;
 
     // Geometry
-    
+    std::vector<Mesh, std::allocator<Mesh>> WorldMesh;
+    Mesh CUBE1 = Mesh(0, 0, 0, WorldMesh);
+    Mesh CUBE2 = Mesh(1, 0, 0, WorldMesh);
+    Mesh CUBE3 = Mesh(0, 1, 0, WorldMesh);
 
     //Cmaera Matrices
     XMMATRIX mWorld;
