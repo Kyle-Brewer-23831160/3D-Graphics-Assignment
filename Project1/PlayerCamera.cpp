@@ -2,26 +2,31 @@
 
 using namespace DirectX;
 
-PlayerCamera::PlayerCamera()
+XMMATRIX PlayerCamera::GetCamView()
 {
-	CameraTransform.PosX = 0;
-	CameraTransform.PosY = 0;
-	CameraTransform.PosZ = 0;
-	 GetViewMatrix();
+    // Create rotation matrix from Euler angles
+    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(Pitch, Yaw, 0.0f);
+
+    // Calculate where the camera is looking
+    XMVECTOR lookAt = XMVector3TransformCoord(XMVectorSet(0, 0, 1, 0), rotation);
+    XMVECTOR up = XMVector3TransformCoord(XMVectorSet(0, 1, 0, 0), rotation);
+
+    XMVECTOR posVec = XMLoadFloat3(&Position);
+    return XMMatrixLookAtLH(posVec, posVec + lookAt, up);
 }
 
-void PlayerCamera::CreateCamMatrix(ObjectTransform& t)
-{
-	XMMATRIX translation = XMMatrixTranslation(t.PosX, t.PosY, t.PosZ);
-	XMMATRIX rotY = XMMatrixRotationY(t.RotY);
-	XMMATRIX rotX = XMMatrixRotationX(t.RotX);
-	XMMATRIX Scale = XMMatrixScaling(t.Scaler, t.Scaler, t.Scaler); //uniform scaling
 
-	CamMatrix = Scale * rotX * rotY * translation;
-}
-
-DirectX::XMMATRIX PlayerCamera::GetViewMatrix()
+void PlayerCamera::Move(float forward, float strafe, float deltaTime)
 {
-	
-	return DirectX::XMMATRIX();
+    float speed = 10.0f * deltaTime;
+
+    // Move relative to where we are facing
+    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(0, Yaw, 0);
+    XMVECTOR forwardVec = XMVector3TransformCoord(XMVectorSet(0, 0, 1, 0), rotation);
+    XMVECTOR rightVec = XMVector3TransformCoord(XMVectorSet(1, 0, 0, 0), rotation);
+
+    XMVECTOR posVec = XMLoadFloat3(&Position);
+    posVec += forwardVec * forward * speed;
+    posVec += rightVec * strafe * speed;
+    XMStoreFloat3(&Position, posVec);
 }

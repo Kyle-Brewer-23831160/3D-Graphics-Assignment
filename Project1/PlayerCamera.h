@@ -5,16 +5,13 @@
 class PlayerCamera
 {
 public:
-	PlayerCamera();
-	void CreateCamMatrix(ObjectTransform& t);
-	PlayerCamera(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 target);
-	void SetPositions(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 target);
-	DirectX::XMMATRIX GetViewMatrix();
+
+    XMMATRIX GetCamView();
+    void Move(float forward, float strafe, float deltaTime);
+
 private:
-	//DirectX::XMFLOAT3 position;
-	//DirectX::XMFLOAT3 mTarget;
-	//DirectX::XMFLOAT3 up;
-	ObjectTransform CameraTransform;
-	XMMATRIX CamMatrix;
+    XMFLOAT3 Position = { 0.0f, 0.0f, -10.0f };
+    float Yaw = 0.0f;   // Left/Right rotation
+    float Pitch = 0.0f; // Up/Down rotation
 };
 

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Mesh.h"
+#include "PlayerCamera.h"
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <string>
@@ -83,6 +84,7 @@ public:
     Mesh CUBE3 = Mesh(0, 1, 0, WorldMesh);
 
     //Cmaera Matrices
+    PlayerCamera mCam;
     XMMATRIX mWorld;
     XMMATRIX mView;
     XMMATRIX mProjection;

@@ -252,12 +252,33 @@ void Renderer::UpdateConstantBuffer(XMMATRIX OBJWorldMatrix)
     float deltaTime = CurrentTime - mPreviousTime;
     mPreviousTime = CurrentTime;
 
-    //----Animation----
-    mAngle += 0.01;
-    CreateWorldMatrix(mAngle);
+    float forward = 0;
+    float Side = 0;
+
+    if (GetAsyncKeyState('W') & 0x8000)
+    {
+        forward = 1.0f;
+    }
+    else if (GetAsyncKeyState('S') & 0x8000)
+    {
+        forward = -1.0f;
+    }
+
+    if (GetAsyncKeyState('D') & 0x8000)
+    {
+        Side = 1.0f;
+    }
+    else if (GetAsyncKeyState('A') & 0x8000)
+    {
+        Side = -1.0f;
+    }
+
+    mCam.Move(forward, Side, deltaTime);
 
     //----Matrices----
-    XMMATRIX wvp = OBJWorldMatrix * mView * mProjection;
+    XMMATRIX camView = mCam.GetCamView();
+
+    XMMATRIX wvp = OBJWorldMatrix * camView * mView * mProjection;
 
     //----Update GPU----
     ConstantBuffer CB;
