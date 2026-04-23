@@ -29,7 +29,7 @@ void Renderer::CompileTileMaps()
         {
             if (TMmanager.TileMap1[i][j] == 1)
             {
-                Mesh NewCube = Mesh(i, j, 0, WorldMesh);
+                Mesh NewCube = Mesh(j, 1 - i, 0, WorldMesh);
                 WorldMesh.push_back(NewCube);
             }
         }
