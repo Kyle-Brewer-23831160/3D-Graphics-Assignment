@@ -4,11 +4,11 @@
 
 
 
-
+#include "Mesh.h"
+#include "PlayerCamera.h"
 #include <dinput.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
-#include "Mesh.h"
 
 using namespace Microsoft::WRL;
 
@@ -28,6 +28,10 @@ public:
     void InitialiseDirectInput();
     void InitialiseKeyboardDevice();
     void InitialiseMouseDevice();
-    void DetectInput(ObjectTransform& t);
+    void DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY);
+
+private:
+    bool Pause = false;
 };
+
 

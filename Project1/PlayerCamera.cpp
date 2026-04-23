@@ -5,7 +5,8 @@ using namespace DirectX;
 XMMATRIX PlayerCamera::GetCamView()
 {
     // Create rotation matrix from Euler angles
-    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(Pitch, Yaw, 0.0f);
+    //Yaw += 0.001f;
+    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(Pitch, Yaw, 0.0f); //change pitch and yaw to rotate
 
     // Calculate where the camera is looking
     XMVECTOR lookAt = XMVector3TransformCoord(XMVectorSet(0, 0, 1, 0), rotation);

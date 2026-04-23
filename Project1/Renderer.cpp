@@ -17,6 +17,23 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
     CreateProjectionMatrix();
     CreateViewMatrix();
     CreateConstantBuffer();
+
+    CompileTileMaps();
+}
+
+void Renderer::CompileTileMaps()
+{
+    for (int i = 0; i < 2; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            if (TMmanager.TileMap1[i][j] == 1)
+            {
+                Mesh NewCube = Mesh(i, j, 0, WorldMesh);
+                WorldMesh.push_back(NewCube);
+            }
+        }
+    }
 }
 
 void Renderer::CreateDevice()
@@ -29,7 +46,7 @@ void Renderer::CreateDevice()
         nullptr,
         0,
         featureLevels,
-        1,
+        1,D
         D3D11_SDK_VERSION,
         mDevice.GetAddressOf(),
         nullptr,
@@ -255,30 +272,13 @@ void Renderer::UpdateConstantBuffer(XMMATRIX OBJWorldMatrix)
     float forward = 0;
     float Side = 0;
 
-    if (GetAsyncKeyState('W') & 0x8000)
-    {
-        forward = 1.0f;
-    }
-    else if (GetAsyncKeyState('S') & 0x8000)
-    {
-        forward = -1.0f;
-    }
-
-    if (GetAsyncKeyState('D') & 0x8000)
-    {
-        Side = 1.0f;
-    }
-    else if (GetAsyncKeyState('A') & 0x8000)
-    {
-        Side = -1.0f;
-    }
-
-    mCam.Move(forward, Side, deltaTime);
+    detector.DetectInput(mCam, mHwnd, 800, 600); //get inputs and update cam matrix
 
     //----Matrices----
     XMMATRIX camView = mCam.GetCamView();
 
-    XMMATRIX wvp = OBJWorldMatrix * camView * mView * mProjection;
+    //if anything is wrong after movement do * mView
+    XMMATRIX wvp = OBJWorldMatrix * camView * mProjection;
 
     //----Update GPU----
     ConstantBuffer CB;

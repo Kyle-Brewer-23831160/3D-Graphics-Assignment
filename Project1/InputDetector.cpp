@@ -58,12 +58,21 @@ void InputDetector::InitialiseMouseDevice()
     mMouseDevice->Acquire(); //Acquire the device to start receiving input.
 }
 
-void InputDetector::DetectInput(ObjectTransform& t)
+void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY)
 {
     currentTime = GetTickCount64() / 1000.0f;
     float deltaTime = currentTime - previousTime;
     previousTime = currentTime;
 
+    float forward = 0;
+    float Side = 0;
+
+    POINT pt;
+    pt.x = ScreenSizeX / 2;
+    pt.y = ScreenSizeY/ 2;
+
+    ClientToScreen(hWnd, &pt);
+    if(!Pause)  SetCursorPos(pt.x, pt.y);
 
     // -------------------------
     // Keyboard
@@ -81,24 +90,19 @@ void InputDetector::DetectInput(ObjectTransform& t)
         {
             const float Speed = 1.5f;
 
-
             // Rotate around Y: A / D
-            if (keyboardState[DIK_A] & 0x80) t.RotY += Speed * deltaTime;
-            if (keyboardState[DIK_D] & 0x80) t.RotY -= Speed * deltaTime;
+            if (keyboardState[DIK_A] & 0x80)  Side = -1.0f;
+            if (keyboardState[DIK_D] & 0x80) Side = 1.0f;
 
 
             // Rotate around Z: W / S
-            if (keyboardState[DIK_W] & 0x80) t.RotX += Speed * deltaTime;
-            if (keyboardState[DIK_S] & 0x80) t.RotX -= Speed * deltaTime;
+            if (keyboardState[DIK_W] & 0x80) forward = 1.0f;
+            if (keyboardState[DIK_S] & 0x80) forward = -1.0f;
 
-
-            // Translate: Arrow keys
-            if (keyboardState[DIK_LEFT] & 0x80) t.PosX -= Speed * deltaTime;
-            if (keyboardState[DIK_RIGHT] & 0x80) t.PosX += Speed * deltaTime;
-
-
-            if (keyboardState[DIK_UP] & 0x80) t.PosY += Speed * deltaTime;
-            if (keyboardState[DIK_DOWN] & 0x80) t.PosY -= Speed * deltaTime;
+            if (keyboardState[DIK_ESCAPE] & 0x80)
+            {
+                Pause = !Pause;
+            }
         }
     }
 
@@ -117,17 +121,13 @@ void InputDetector::DetectInput(ObjectTransform& t)
         }
         else
         {
-            // Wheel delta: positive = scroll up, negative = scroll down
-            const float scaleStep = 0.10f;
+            if (mouseState.lX > 0) cam.Yaw += 0.02f;
+            if (mouseState.lX < 0) cam.Yaw -= 0.02f;
 
-
-            if (mouseState.lZ > 0) t.Scaler += scaleStep;
-            if (mouseState.lZ < 0) t.Scaler -= scaleStep;
-
-
-            // Clamp to avoid negative/zero scale
-            t.Scaler = t.Scaler > 0.1f ? t.Scaler : 0.1f;
-
+            if(mouseState.lY > 0) cam.Pitch += 0.02f;
+            if(mouseState.lY < 0) cam.Pitch -= 0.02f;
         }
     }
+
+    cam.Move(forward, Side, deltaTime);
 }

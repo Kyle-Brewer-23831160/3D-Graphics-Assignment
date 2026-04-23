@@ -2,7 +2,8 @@
 #pragma once
 
 #include "Mesh.h"
-#include "PlayerCamera.h"
+#include "InputDetector.h"
+#include "TileMap.h"
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <string>
@@ -35,6 +36,7 @@ public:
 
 private:
     // Init steps
+    void CompileTileMaps();
     void CreateDevice();
     void CreateSwapChain();
     void CreateRenderTargetView();
@@ -78,10 +80,14 @@ public:
     float mAngle;
 
     // Geometry
+    TileMap TMmanager;
     std::vector<Mesh, std::allocator<Mesh>> WorldMesh;
-    Mesh CUBE1 = Mesh(0, 0, 0, WorldMesh);
-    Mesh CUBE2 = Mesh(3, 0, 0, WorldMesh);
-    Mesh CUBE3 = Mesh(0, 1, 0, WorldMesh);
+    //Mesh CUBE1 = Mesh(0, 0, 0, WorldMesh);
+    //Mesh CUBE2 = Mesh(3, 0, 0, WorldMesh);
+    //Mesh CUBE3 = Mesh(0, 1, 0, WorldMesh);
+
+    //Input Detection
+    InputDetector detector = InputDetector(mHwnd);
 
     //Cmaera Matrices
     PlayerCamera mCam;

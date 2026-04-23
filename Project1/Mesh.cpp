@@ -2,6 +2,7 @@
 
 Mesh::Mesh(int Row, int Column, int Depth, std::vector<Mesh> &list)
 {
+
 	ObjTransform.PosX = Row * 1.02f;
 	ObjTransform.PosY = Column * 1.02f;
 	ObjTransform.PosZ = Depth * 1.0f;

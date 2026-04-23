@@ -137,12 +137,14 @@
     <ClCompile Include="PlayerCamera.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="TileMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="InputDetector.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="PlayerCamera.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="TileMap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
