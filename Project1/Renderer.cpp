@@ -46,7 +46,7 @@ void Renderer::CreateDevice()
         nullptr,
         0,
         featureLevels,
-        1,D
+        1,
         D3D11_SDK_VERSION,
         mDevice.GetAddressOf(),
         nullptr,
