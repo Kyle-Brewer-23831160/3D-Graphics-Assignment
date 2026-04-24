@@ -1,11 +1,11 @@
 #include "Mesh.h"
 
-Mesh::Mesh(int Row, int Column, int Depth, std::vector<Mesh> &list)
+Mesh::Mesh(int Row, int Column, int Depth, std::vector<Mesh> &list, ID3D11ShaderResourceView* texture)
 {
-
-	ObjTransform.PosX = Row * 1.02f;
-	ObjTransform.PosY = Column * 1.02f;
-	ObjTransform.PosZ = Depth * 1.0f;
+	pTexture = texture;
+	ObjTransform.PosX += Row * 1.003f;
+	ObjTransform.PosY += Column * 1.003f;
+	ObjTransform.PosZ += Depth * 1.003f;
 	CreateWorldMatrix(ObjTransform);
 
 	list.push_back(*this);

@@ -138,6 +138,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="TileMap.cpp" />
+    <ClCompile Include="WICTextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="InputDetector.h" />
@@ -145,6 +146,7 @@
     <ClInclude Include="PlayerCamera.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="TileMap.h" />
+    <ClInclude Include="WICTextureLoader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

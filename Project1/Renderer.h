@@ -4,7 +4,7 @@
 #include "Mesh.h"
 #include "InputDetector.h"
 #include "TileMap.h"
-#include <d3d11.h>
+#include "WICTextureLoader.h"
 #include <d3dcompiler.h>
 #include <string>
 
@@ -19,7 +19,7 @@ struct ConstantBuffer
 struct VertexData
 {
     XMFLOAT3 position;
-    XMFLOAT4 color;
+    XMFLOAT2 texCoord;
 };
 
 class Renderer
@@ -48,6 +48,7 @@ private:
     void CreateConstantBuffer();
     void CreateTriangleGeometry();
     void CreateStencilBuffer();
+    ID3D11ShaderResourceView* LoadTexture(const wchar_t* TextureAdress);
 
     // Per-frame bindings
     void SetPipelineState();
@@ -74,6 +75,10 @@ public:
     ComPtr<ID3D11Buffer> IndexBuffer;
     ComPtr<ID3D11Texture2D> mdepthStencilBuffer;
     ComPtr<ID3D11DepthStencilView> mdepthStencilView;
+
+    //Texture
+    ComPtr<ID3D11SamplerState> mSamplerState;
+    ComPtr<ID3D11ShaderResourceView> mTextureView;
 
 
     float mPreviousTime;

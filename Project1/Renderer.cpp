@@ -9,9 +9,7 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
     CreateRenderTargetView();
     CreateShaders();
     CreateInputLayout();
-
     CreateTriangleGeometry();
-
     CreateStencilBuffer();
 
     CreateProjectionMatrix();
@@ -23,17 +21,124 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
 
 void Renderer::CompileTileMaps()
 {
-    for (int i = 0; i < 2; i++)
+    ID3D11ShaderResourceView* whiteTex = LoadTexture(L"Textures\\White.jpg");
+    ID3D11ShaderResourceView* blackTex = LoadTexture(L"Textures\\Black.jpg");
+
+    int rows = sizeof(TMmanager.TileMap1Layout) / sizeof(TMmanager.TileMap1Layout[0]);
+    int Columns = sizeof(TMmanager.TileMap1Layout[0]) / sizeof(TMmanager.TileMap1Layout[0][0]);
+
+    for (int a = 0; a < TMmanager.TileMaps.size(); a++)
     {
-        for (int j = 0; j < 4; j++)
+        for (int i = 0; i < rows; i++)
         {
-            if (TMmanager.TileMap1[i][j] == 1)
+            for (int j = 0; j < Columns; j++)
             {
-                Mesh NewCube = Mesh(j, 1 - i, 0, WorldMesh);
-                WorldMesh.push_back(NewCube);
+                if (TMmanager.TileMaps[a].TileMap[i][j] == 1) //Tilemap "a" at row "i" and column "j" //1 = default cube
+                {
+                    Mesh NewCube = Mesh(j, a, 1 - i, WorldMesh, whiteTex);
+                    WorldMesh.push_back(NewCube);
+                }
+                else if (TMmanager.TileMaps[a].TileMap[i][j] == 2)
+                {
+                    Mesh NewCube = Mesh(j, a, 1 - i, WorldMesh, blackTex);
+                    WorldMesh.push_back(NewCube);
+                }
             }
         }
     }
+}
+
+void Renderer::CreateTriangleGeometry()
+{
+    VertexData vertices[] =
+ {
+   // Front Face
+   { {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f} },
+   { {-1.0f, 1.0f, -1.0f}, {0.0f, 0.0f} },
+   { { 1.0f, 1.0f, -1.0f}, {1.0f, 0.0f} },
+   { { 1.0f, -1.0f, -1.0f}, {1.0f, 1.0f} },
+ 
+   // Back Face
+   { {-1.0f, -1.0f, 1.0f}, {1.0f, 1.0f} },
+   { { 1.0f, -1.0f, 1.0f}, {0.0f, 1.0f} },
+   { { 1.0f, 1.0f, 1.0f}, {0.0f, 0.0f} },
+   { {-1.0f, 1.0f, 1.0f}, {1.0f, 0.0f} },
+ 
+   // Top Face
+   { {-1.0f, 1.0f, -1.0f}, {0.0f, 1.0f} },
+   { {-1.0f, 1.0f, 1.0f}, {0.0f, 0.0f} },
+   { { 1.0f, 1.0f, 1.0f}, {1.0f, 0.0f} },
+   { { 1.0f, 1.0f, -1.0f}, {1.0f, 1.0f} },
+ 
+   // Bottom Face
+   { {-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f} },
+   { { 1.0f, -1.0f, -1.0f}, {0.0f, 1.0f} },
+   { { 1.0f, -1.0f, 1.0f}, {0.0f, 0.0f} },
+   { {-1.0f, -1.0f, 1.0f}, {1.0f, 0.0f} },
+ 
+   // Left Face
+   { {-1.0f, -1.0f, 1.0f}, {0.0f, 1.0f} },
+   { {-1.0f, 1.0f, 1.0f}, {0.0f, 0.0f} },
+   { {-1.0f, 1.0f, -1.0f}, {1.0f, 0.0f} },
+   { {-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f} },
+ 
+   // Right Face
+   { { 1.0f, -1.0f, -1.0f}, {0.0f, 1.0f} },
+   { { 1.0f, 1.0f, -1.0f}, {0.0f, 0.0f} },
+   { { 1.0f, 1.0f, 1.0f}, {1.0f, 0.0f} },
+   { { 1.0f, -1.0f, 1.0f}, {1.0f, 1.0f} },
+ };
+ 
+ 
+ uint32_t indices[] = {
+   // Front Face
+   0, 1, 2,
+   0, 2, 3,
+ 
+   // Back Face
+   4, 5, 6,
+   4, 6, 7,
+ 
+   // Top Face
+   8, 9, 10,
+   8, 10, 11,
+ 
+   // Bottom Face
+   12, 13, 14,
+   12, 14, 15,
+ 
+   // Left Face
+   16, 17, 18,
+   16, 18, 19,
+ 
+   // Right Face
+   20, 21, 22,
+   20, 22, 23
+ };
+
+    //VERTEX BUFFER & DATA DESCRIPTION
+    D3D11_BUFFER_DESC vbDesc{};
+    vbDesc.Usage = D3D11_USAGE_DEFAULT;
+    vbDesc.ByteWidth = sizeof(vertices);
+    vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    D3D11_SUBRESOURCE_DATA vbData{};
+    vbData.pSysMem = vertices;
+
+    HRESULT Result = mDevice->CreateBuffer(&vbDesc, &vbData, vertexBuffer.GetAddressOf());
+
+    if (FAILED(Result)) (L"FAILED TO CREATE VERTEX BUFFER");
+
+    //INDEX BUFFER & DATA DESCRIPTION
+    D3D11_BUFFER_DESC ibDesc{};
+    ibDesc.Usage = D3D11_USAGE_DEFAULT;
+    ibDesc.ByteWidth = sizeof(int) * 36;
+    ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    D3D11_SUBRESOURCE_DATA ibData{};
+    ibData.pSysMem = indices;
+
+    Result = mDevice->CreateBuffer(&ibDesc, &ibData, IndexBuffer.GetAddressOf());
+
+    if (FAILED(Result)) (L"FAILED TO CREATE INDEX BUFFER");
 }
 
 void Renderer::CreateDevice()
@@ -133,12 +238,16 @@ void Renderer::CreateShaders()
     struct PS_INPUT
     {
         float4 position : SV_POSITION;
-        float4 color    : COLOR;
+        float2 inTexCoord    : TEXCOORD;
     };
+
+    Texture2D texObject : register(t0);
+    SamplerState objSampleState : register(s0);
 
     float4 main(PS_INPUT input) : SV_TARGET
     {
-        return input.color;
+        float3 pixelcolour = texObject.Sample(objSampleState, input.inTexCoord);
+        return float4(pixelcolour, 1.0f);
     }
     )";
 
@@ -170,20 +279,20 @@ void Renderer::CreateShaders()
                     struct vertexIn
                     {
                         float3 position : POSITION;
-                        float4 color    : COLOR;
+                        float2 inTexCoord    : TEXCOORD;
                     };
 
                     struct vertexOut
                     {
                        float4 position : SV_POSITION;
-                       float4 color    : COLOR;
+                       float2 outTexCoord : TEXCOORD;
                     };
 
                     vertexOut main(vertexIn input)
                     {
                         vertexOut output;
                         output.position = mul(float4(input.position, 1.0f), WVP);
-                        output.color = input.color;      
+                        output.outTexCoord = input.inTexCoord;      
                         return output;
                     }
                 )";
@@ -204,18 +313,15 @@ void Renderer::CreateShaders()
         OutputDebugString(L"Successful to craete Vertex Shader!\n");
 
     }
-
-
 }
 
 void Renderer::CreateInputLayout()
 {
     D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
     };
     mDevice->CreateInputLayout(inputElementDesc, 2, mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), mInputLayout.GetAddressOf());
-
 }
 
 void Renderer::CreateViewMatrix()
@@ -293,74 +399,6 @@ void Renderer::UpdateConstantBuffer(XMMATRIX OBJWorldMatrix)
     );
 }
 
-void Renderer::CreateTriangleGeometry()
-{
-    VertexData vertices[] =
-    {
-        //Front Face
-        { XMFLOAT3(-0.5f, 0.5f, -0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left 
-        { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
-        { XMFLOAT3(-0.5f, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
-        { XMFLOAT3(0.5f, -0.5f,  -0.5f), XMFLOAT4(0, 0, 1, 1) },  // Blue //Bottom Right
-        //Back Face
-        { XMFLOAT3(-0.5f, 0.5f, 0.5f), XMFLOAT4(1, 0, 0, 1) }, // Red // Top Left
-        { XMFLOAT3(0.5f,  0.5f, 0.5f), XMFLOAT4(0, 1, 0, 1) }, // Green //Top Right
-        { XMFLOAT3(-0.5f, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }, // Blue //Bottom Left
-        { XMFLOAT3(0.5f, -0.5f, 0.5f), XMFLOAT4(0, 0, 1, 1) }  // Blue //Bottom Right
-    };
-
-    uint32_t indices[] =
-    {
-        // Front Face (Z = 0.0f)
-        0, 2, 1,
-        1, 3, 2,
-
-        // Back Face (Z = 0.5f)
-        4, 6, 5,
-        5, 6, 7,
-
-        // Left Face
-        4, 0, 6,
-        0, 2, 6,
-
-        // Right Face
-        1, 5, 3,
-        5, 7, 3,
-
-        // Top Face
-        4, 5, 0,
-        5, 1, 0,
-
-        // Bottom Face
-        2, 3, 6,
-        3, 7, 6
-    };
-
-    //VERTEX BUFFER & DATA DESCRIPTION
-    D3D11_BUFFER_DESC vbDesc{};
-    vbDesc.Usage = D3D11_USAGE_DEFAULT;
-    vbDesc.ByteWidth = sizeof(vertices);
-    vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    D3D11_SUBRESOURCE_DATA vbData{};
-    vbData.pSysMem = vertices;
-
-    HRESULT Result = mDevice->CreateBuffer(&vbDesc, &vbData, vertexBuffer.GetAddressOf());
-
-    if (FAILED(Result)) (L"FAILED TO CREATE VERTEX BUFFER");
-
-    //INDEX BUFFER & DATA DESCRIPTION
-    D3D11_BUFFER_DESC ibDesc{};
-    ibDesc.Usage = D3D11_USAGE_DEFAULT;
-    ibDesc.ByteWidth = sizeof(int) * 36;
-    ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    D3D11_SUBRESOURCE_DATA ibData{};
-    ibData.pSysMem = indices;
-
-    Result = mDevice->CreateBuffer(&ibDesc, &ibData, IndexBuffer.GetAddressOf());
-
-    if (FAILED(Result)) (L"FAILED TO CREATE INDEX BUFFER");
-}
-
 void Renderer::CreateStencilBuffer()
 {
     D3D11_TEXTURE2D_DESC depthStencilDesc;
@@ -379,6 +417,41 @@ void Renderer::CreateStencilBuffer()
     mDevice->CreateDepthStencilView(mdepthStencilBuffer.Get(), NULL, &mdepthStencilView);
 }
 
+ID3D11ShaderResourceView* Renderer::LoadTexture(const wchar_t *TextureAdress)
+{
+    //Create Texture Sampler
+    D3D11_SAMPLER_DESC sampDesc;
+    ZeroMemory(&sampDesc, sizeof(sampDesc));
+    sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+
+    HRESULT hr = mDevice->CreateSamplerState(&sampDesc, mSamplerState.GetAddressOf());
+    if (FAILED(hr)) OutputDebugString(L"Failed to create sampler state.");
+
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> tempView;
+
+    //Create Texture View
+    hr = DirectX::CreateWICTextureFromFile(
+        mDevice.Get(),                   // ID3D11Device*
+        mDeviceContext.Get(),            // ID3D11DeviceContext*
+        TextureAdress,       // const wchar_t*
+        nullptr,
+        tempView.GetAddressOf());
+    if (FAILED(hr))
+    {
+        OutputDebugString(L"Failed Load Texture!\n");
+        return nullptr;
+    }
+    OutputDebugString(L"Successfully Loaded Texture!\n");
+    return tempView.Detach();
+}
+
 void Renderer::BindGeometry()
 {
     UINT stride = sizeof(VertexData);
@@ -391,6 +464,8 @@ void Renderer::BindGeometry()
 void Renderer::SetPipelineState()
 {
     mDeviceContext->OMSetRenderTargets(1, mRenderTargetView.GetAddressOf(), mdepthStencilView.Get());
+    mDeviceContext->PSSetSamplers(0, 1, mSamplerState.GetAddressOf());
+
     mDeviceContext->PSSetShader(mPixelShader.Get(), nullptr, 0);
     mDeviceContext->VSSetShader(mVertexShader.Get(), nullptr, 0);
     mDeviceContext->VSSetConstantBuffers(0, 1, mConstantBuffer.GetAddressOf());
@@ -438,6 +513,9 @@ void Renderer::RenderFrame()
     {
         WorldMesh[i].CreateWorldMatrix(WorldMesh[i].ObjTransform);
         UpdateConstantBuffer(WorldMesh[i].ReturnMatrix());
+
+        ID3D11ShaderResourceView* texture = WorldMesh[i].GetTexture();
+        mDeviceContext->PSSetShaderResources(0, 1, &texture);
         mDeviceContext->DrawIndexed(36, 0, 0); // 36 indices for one cube
     }
 
