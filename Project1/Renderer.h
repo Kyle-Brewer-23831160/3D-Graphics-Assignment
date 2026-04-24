@@ -4,12 +4,14 @@
 #include "Mesh.h"
 #include "InputDetector.h"
 #include "TileMap.h"
+#include "CollisionManager.h"
 #include "WICTextureLoader.h"
 #include <d3dcompiler.h>
 #include <string>
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
+
 
 struct ConstantBuffer
 {
@@ -87,9 +89,8 @@ public:
     // Geometry
     TileMap TMmanager;
     std::vector<Mesh, std::allocator<Mesh>> WorldMesh;
-    //Mesh CUBE1 = Mesh(0, 0, 0, WorldMesh);
-    //Mesh CUBE2 = Mesh(3, 0, 0, WorldMesh);
-    //Mesh CUBE3 = Mesh(0, 1, 0, WorldMesh);
+
+    Mesh PlayerBox;
 
     //Input Detection
     InputDetector detector = InputDetector(mHwnd);

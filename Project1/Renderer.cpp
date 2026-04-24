@@ -21,8 +21,13 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
 
 void Renderer::CompileTileMaps()
 {
+    PlayerBox.ObjTransform.PosY = 0; //matching camera default position
+    PlayerBox.ObjTransform.PosY = -10;
+
     ID3D11ShaderResourceView* whiteTex = LoadTexture(L"Textures\\White.jpg");
     ID3D11ShaderResourceView* blackTex = LoadTexture(L"Textures\\Black.jpg");
+
+    PlayerBox = Mesh(0, 0, 0, WorldMesh, whiteTex);
 
     int rows = sizeof(TMmanager.TileMap1Layout) / sizeof(TMmanager.TileMap1Layout[0]);
     int Columns = sizeof(TMmanager.TileMap1Layout[0]) / sizeof(TMmanager.TileMap1Layout[0][0]);
@@ -380,6 +385,10 @@ void Renderer::UpdateConstantBuffer(XMMATRIX OBJWorldMatrix)
 
     detector.DetectInput(mCam, mHwnd, 800, 600); //get inputs and update cam matrix
 
+    PlayerBox.ObjTransform.PosX = mCam.Position.x;
+    PlayerBox.ObjTransform.PosY = mCam.Position.y;
+    PlayerBox.ObjTransform.PosZ = mCam.Position.z;
+
     //----Matrices----
     XMMATRIX camView = mCam.GetCamView();
 
@@ -511,6 +520,12 @@ void Renderer::RenderFrame()
 
     for (int i = 0; i < WorldMesh.size(); i++)
     {
+        OBB movingOBB = CollisionManager::BuildCubeOBB(PlayerBox.ObjTransform);
+        OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
+        bool isColliding = CollisionManager::CheckOBBOverlap(movingOBB, fixedOBB);
+        if (isColliding)
+            OutputDebugStringA("COLLIDING \ n");
+
         WorldMesh[i].CreateWorldMatrix(WorldMesh[i].ObjTransform);
         UpdateConstantBuffer(WorldMesh[i].ReturnMatrix());
 

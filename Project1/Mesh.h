@@ -20,6 +20,13 @@ struct ObjectTransform
 	float Scaler = 1.0f;
 };
 
+struct OBB
+{
+	XMFLOAT3 Center;
+	XMFLOAT3 Axis[3]; 
+	XMFLOAT3 Extents;
+};
+
 class Mesh
 {
 public:
