@@ -1,6 +1,7 @@
 // Renderer.h
 #pragma once
 
+#include "DDSTextureLoader.h"
 #include "Mesh.h"
 #include "InputDetector.h"
 #include "TileMap.h"
@@ -10,6 +11,16 @@
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
+
+struct SkyboxConstantBuffer
+{
+    XMMATRIX vp;
+};
+
+struct SkyboxVertexData
+{
+    XMFLOAT3 position;
+};
 
 struct ConstantBuffer
 {
@@ -49,6 +60,8 @@ private:
     void CreateTriangleGeometry();
     void CreateStencilBuffer();
     ID3D11ShaderResourceView* LoadTexture(const wchar_t* TextureAdress);
+    void LoadCubeMap();
+    void CreateSkyboxGeometry();
 
     // Per-frame bindings
     void SetPipelineState();
@@ -75,6 +88,17 @@ public:
     ComPtr<ID3D11Buffer> IndexBuffer;
     ComPtr<ID3D11Texture2D> mdepthStencilBuffer;
     ComPtr<ID3D11DepthStencilView> mdepthStencilView;
+
+    //skybox
+    ComPtr<ID3D11ShaderResourceView> SkyboxTextureView;
+    ComPtr<ID3D11VertexShader> mSkyboxVertexShader;
+    ComPtr<ID3D11PixelShader>  mSkyboxPixelShader;
+    ComPtr<ID3DBlob>           mSkyboxVertexShaderBlob;
+    ComPtr<ID3DBlob>           mSkyboxPixelShaderBlob;
+    ComPtr<ID3D11InputLayout>  mSkyboxInputLayout;
+    ComPtr<ID3D11Buffer> mSkyboxConstantBuffer;
+    ComPtr<ID3D11Buffer> SkyboxVertexBuffer;
+    ComPtr<ID3D11Buffer> SkyboxIndexBuffer;
 
     //Texture
     ComPtr<ID3D11SamplerState> mSamplerState;
