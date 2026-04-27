@@ -21,13 +21,10 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
 
 void Renderer::CompileTileMaps()
 {
-    PlayerBox.ObjTransform.PosY = 0; //matching camera default position
-    PlayerBox.ObjTransform.PosY = -10;
-
     ID3D11ShaderResourceView* whiteTex = LoadTexture(L"Textures\\White.jpg");
     ID3D11ShaderResourceView* blackTex = LoadTexture(L"Textures\\Black.jpg");
 
-    PlayerBox = Mesh(0, 0, 0, WorldMesh, whiteTex);
+    PlayerBox = Mesh(0, 0, 0, whiteTex);
 
     int rows = sizeof(TMmanager.TileMap1Layout) / sizeof(TMmanager.TileMap1Layout[0]);
     int Columns = sizeof(TMmanager.TileMap1Layout[0]) / sizeof(TMmanager.TileMap1Layout[0][0]);
@@ -40,17 +37,20 @@ void Renderer::CompileTileMaps()
             {
                 if (TMmanager.TileMaps[a].TileMap[i][j] == 1) //Tilemap "a" at row "i" and column "j" //1 = default cube
                 {
-                    Mesh NewCube = Mesh(j, a, 1 - i, WorldMesh, whiteTex);
+                    Mesh NewCube = Mesh(j, a, 1 - i, whiteTex);
                     WorldMesh.push_back(NewCube);
                 }
                 else if (TMmanager.TileMaps[a].TileMap[i][j] == 2)
                 {
-                    Mesh NewCube = Mesh(j, a, 1 - i, WorldMesh, blackTex);
+                    Mesh NewCube = Mesh(j, a, 1 - i, blackTex);
                     WorldMesh.push_back(NewCube);
                 }
             }
         }
     }
+
+    PlayerBox.ObjTransform.PosY = 0; //matching camera default position
+    PlayerBox.ObjTransform.PosZ = -10;
 }
 
 void Renderer::CreateTriangleGeometry()
@@ -375,20 +375,6 @@ void Renderer::CreateConstantBuffer()
 
 void Renderer::UpdateConstantBuffer(XMMATRIX OBJWorldMatrix)
 {
-    //----TIME----
-    float CurrentTime = GetTickCount64() / 1000.0f;//obtain the elapsed system time and convert into seconds
-    float deltaTime = CurrentTime - mPreviousTime;
-    mPreviousTime = CurrentTime;
-
-    float forward = 0;
-    float Side = 0;
-
-    detector.DetectInput(mCam, mHwnd, 800, 600); //get inputs and update cam matrix
-
-    PlayerBox.ObjTransform.PosX = mCam.Position.x;
-    PlayerBox.ObjTransform.PosY = mCam.Position.y;
-    PlayerBox.ObjTransform.PosZ = mCam.Position.z;
-
     //----Matrices----
     XMMATRIX camView = mCam.GetCamView();
 
@@ -511,21 +497,43 @@ void Renderer::ClearColor(XMFLOAT4 color)
 
 void Renderer::RenderFrame()
 {
-    ClearColor({ 0.2f, 0.5f, 0.4f, 1.0f });
+    //----TIME----
+    float CurrentTime = GetTickCount64() / 1000.0f;//obtain the elapsed system time and convert into seconds
+    float deltaTime = CurrentTime - mPreviousTime;
+    mPreviousTime = CurrentTime;
 
-    SetPipelineState();
-    BindGeometry();
+    ClearColor({ 0.2f, 0.5f, 0.4f, 1.0f });
 
     mDeviceContext->ClearDepthStencilView(mdepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0F, 0);
 
+    //----CHECK FOR VALID MOVEMENTS----
+    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side); //get inputs
+
+    ObjectTransform transformSave = PlayerBox.ObjTransform; //create transform save
+    PlayerBox.Move(forward, side, deltaTime, mCam.Yaw);//move player transform to new position
+    OBB movingOBB = CollisionManager::BuildCubeOBB(PlayerBox.ObjTransform); //build orient bounding box at that position
+
+    bool CanMove = true;
+    
     for (int i = 0; i < WorldMesh.size(); i++)
     {
-        OBB movingOBB = CollisionManager::BuildCubeOBB(PlayerBox.ObjTransform);
-        OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
-        bool isColliding = CollisionManager::CheckOBBOverlap(movingOBB, fixedOBB);
-        if (isColliding)
-            OutputDebugStringA("COLLIDING \ n");
+       OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
 
+       bool isColliding = CollisionManager::CheckOBBOverlap(movingOBB, fixedOBB); //check bounding box collision against all other world objects
+       if (isColliding) { CanMove = false; } //if colliding with any, player should not move
+    }
+
+    //-----MOVE PLAYER-----
+    if(CanMove) { mCam.Move(forward, side, deltaTime); } //if can move, update playercam and leave playerbox transform at new position
+    else { PlayerBox.ObjTransform = transformSave; } //if cant move, revert changes to player box transform.
+
+
+    //---RENDER WORLD----
+    SetPipelineState();
+    BindGeometry();
+
+    for (int i = 0; i < WorldMesh.size(); i++)
+    {
         WorldMesh[i].CreateWorldMatrix(WorldMesh[i].ObjTransform);
         UpdateConstantBuffer(WorldMesh[i].ReturnMatrix());
 

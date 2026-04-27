@@ -9,7 +9,7 @@ OBB CollisionManager::BuildCubeOBB(const ObjectTransform& t)
 
     obb.Extents = XMFLOAT3(1.0f * t.Scaler, 1.0f * t.Scaler, 1.0f * t.Scaler); //change values if difference in space between vertices is not 1
 
-    XMMATRIX rotation = XMMatrixRotationZ(t.RotZ) * XMMatrixRotationZ(t.RotX) * XMMatrixRotationZ(t.RotY);
+    XMMATRIX rotation = XMMatrixRotationX(t.RotX) * XMMatrixRotationY(t.RotY) * XMMatrixRotationZ(t.RotZ);
 
     //locals of the box
     XMVECTOR localRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);

@@ -100,4 +100,6 @@ public:
     XMMATRIX mWorld;
     XMMATRIX mView;
     XMMATRIX mProjection;
+    float forward;
+    float side;
 };

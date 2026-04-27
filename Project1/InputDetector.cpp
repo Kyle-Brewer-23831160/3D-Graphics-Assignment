@@ -58,14 +58,14 @@ void InputDetector::InitialiseMouseDevice()
     mMouseDevice->Acquire(); //Acquire the device to start receiving input.
 }
 
-void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY)
+void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY, float &forward, float &side)
 {
     currentTime = GetTickCount64() / 1000.0f;
     float deltaTime = currentTime - previousTime;
     previousTime = currentTime;
 
-    float forward = 0;
-    float Side = 0;
+    forward = 0;
+    side = 0;
 
     POINT pt;
     pt.x = ScreenSizeX / 2;
@@ -91,8 +91,8 @@ void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, i
             const float Speed = 1.5f;
 
             // Rotate around Y: A / D
-            if (keyboardState[DIK_A] & 0x80)  Side = -1.0f;
-            if (keyboardState[DIK_D] & 0x80) Side = 1.0f;
+            if (keyboardState[DIK_A] & 0x80)  side = -1.0f;
+            if (keyboardState[DIK_D] & 0x80) side = 1.0f;
 
 
             // Rotate around Z: W / S
@@ -128,6 +128,4 @@ void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, i
             if(mouseState.lY < 0) cam.Pitch -= 0.02f;
         }
     }
-
-    cam.Move(forward, Side, deltaTime);
 }
