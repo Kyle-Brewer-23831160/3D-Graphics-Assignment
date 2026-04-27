@@ -3,7 +3,7 @@
 Mesh::Mesh(int Row, int Column, int Depth, ID3D11ShaderResourceView* texture)
 {
 	ObjTransform.PosX = 0;
-	ObjTransform.PosY = 0;
+	ObjTransform.PosY = -2.7;
     ObjTransform.PosZ = 10;
 
 	pTexture = texture;
