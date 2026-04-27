@@ -10,6 +10,6 @@ public:
     void Move(float forward, float strafe, float deltaTime);
     float Yaw = 0.0f;   // Left/Right rotation
     float Pitch = 0.0f; // Up/Down rotation
-    XMFLOAT3 Position = { 0.0f, 0.0f, -10.0f };
+    XMFLOAT3 Position = { 10.0f, -1.5f, -10.0f };
 };
 

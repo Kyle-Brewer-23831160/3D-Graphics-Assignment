@@ -49,7 +49,8 @@ void Renderer::CompileTileMaps()
         }
     }
 
-    PlayerBox.ObjTransform.PosY = 0; //matching camera default position
+    PlayerBox.ObjTransform.PosX = 10;
+    PlayerBox.ObjTransform.PosY = -1.5; //matching camera default position
     PlayerBox.ObjTransform.PosZ = -10;
 }
 
@@ -418,9 +419,9 @@ ID3D11ShaderResourceView* Renderer::LoadTexture(const wchar_t *TextureAdress)
     D3D11_SAMPLER_DESC sampDesc;
     ZeroMemory(&sampDesc, sizeof(sampDesc));
     sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
     sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
@@ -469,8 +470,12 @@ void Renderer::SetPipelineState()
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     D3D11_RASTERIZER_DESC rasterDesc = {};
     rasterDesc.FillMode = D3D11_FILL_SOLID;
-    rasterDesc.CullMode = D3D11_CULL_NONE;  
+    rasterDesc.CullMode = D3D11_CULL_NONE;
     rasterDesc.DepthClipEnable = TRUE;
+    rasterDesc.DepthBias = 1000;
+    rasterDesc.ScissorEnable = FALSE;
+    rasterDesc.MultisampleEnable = FALSE;
+    rasterDesc.AntialiasedLineEnable = FALSE;
 
     ComPtr<ID3D11RasterizerState> rasterState;
     mDevice->CreateRasterizerState(&rasterDesc, rasterState.GetAddressOf());
@@ -520,7 +525,10 @@ void Renderer::RenderFrame()
        OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
 
        bool isColliding = CollisionManager::CheckOBBOverlap(movingOBB, fixedOBB); //check bounding box collision against all other world objects
-       if (isColliding) { CanMove = false; } //if colliding with any, player should not move
+       if (isColliding) 
+       { 
+          CanMove = false; 
+       } //if colliding with any, player should not move
     }
 
     //-----MOVE PLAYER-----
@@ -536,7 +544,6 @@ void Renderer::RenderFrame()
     {
         WorldMesh[i].CreateWorldMatrix(WorldMesh[i].ObjTransform);
         UpdateConstantBuffer(WorldMesh[i].ReturnMatrix());
-
         ID3D11ShaderResourceView* texture = WorldMesh[i].GetTexture();
         mDeviceContext->PSSetShaderResources(0, 1, &texture);
         mDeviceContext->DrawIndexed(36, 0, 0); // 36 indices for one cube
