@@ -32,6 +32,7 @@ public:
 
 private:
     bool Pause = false;
+    bool ESCHELD;
 };
 
 

@@ -88,20 +88,23 @@ void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, i
         }
         else
         {
-            const float Speed = 1.5f;
-
-            // Rotate around Y: A / D
             if (keyboardState[DIK_A] & 0x80)  side = -1.0f;
             if (keyboardState[DIK_D] & 0x80) side = 1.0f;
 
-
-            // Rotate around Z: W / S
             if (keyboardState[DIK_W] & 0x80) forward = 1.0f;
             if (keyboardState[DIK_S] & 0x80) forward = -1.0f;
 
             if (keyboardState[DIK_ESCAPE] & 0x80)
             {
-                Pause = !Pause;
+                if (!ESCHELD)
+                {
+                    Pause = !Pause;
+                    ESCHELD = true;
+                }
+            }
+            else
+            {
+                ESCHELD = false;
             }
         }
     }
@@ -124,8 +127,8 @@ void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, i
             if (mouseState.lX > 0) cam.Yaw += 0.02f;
             if (mouseState.lX < 0) cam.Yaw -= 0.02f;
 
-            if(mouseState.lY > 0) cam.Pitch += 0.02f;
-            if(mouseState.lY < 0) cam.Pitch -= 0.02f;
+            if (cam.Pitch < 2.0f)  if(mouseState.lY > 0) cam.Pitch += 0.02f;
+            if (cam.Pitch > -2.0f)  if(mouseState.lY < 0) cam.Pitch -= 0.02f;
         }
     }
 }
