@@ -31,6 +31,7 @@ public:
     ~Renderer() = default;
 
     void RenderFrame();                 // Clear + bind pipeline + draw + present
+    void RenderStartScreenUI(HWND mHWnd);
     void ClearColor(XMFLOAT4 color);    // Optional if you want to call it manually
 
     ID3D11Device* GetDevice() const { return mDevice.Get(); }
@@ -94,11 +95,14 @@ public:
     //Input Detection
     InputDetector detector = InputDetector(mHwnd);
 
-    //Cmaera Matrices
+    //Camera Matrices
     PlayerCamera mCam;
     XMMATRIX mWorld;
     XMMATRIX mView;
     XMMATRIX mProjection;
     float forward;
     float side;
+
+    //game state
+    int state = 0;
 };

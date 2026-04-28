@@ -189,10 +189,11 @@ void Renderer::CreateSwapChain()
     scd.BufferCount = 1;
     scd.BufferDesc.Width = rect.right - rect.left;
     scd.BufferDesc.Height = rect.bottom - rect.top;
-    scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    scd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; //format required for UI text
     scd.BufferDesc.RefreshRate.Numerator = 60;
     scd.BufferDesc.RefreshRate.Denominator = 1;
     scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    scd.Flags = DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE; //flag required for UI text
     scd.OutputWindow = mHwnd;
     scd.SampleDesc.Count = 1;
     scd.SampleDesc.Quality = 0;
@@ -514,7 +515,7 @@ void Renderer::RenderFrame()
     mDeviceContext->ClearDepthStencilView(mdepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0F, 0);
 
     //----CHECK FOR VALID MOVEMENTS----
-    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side); //get inputs
+    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //get inputs
 
     ObjectTransform transformSave = PlayerBox.ObjTransform; //create transform save
     PlayerBox.Move(forward, side, deltaTime, mCam.Yaw);//move player transform to new position
@@ -563,6 +564,38 @@ void Renderer::RenderFrame()
         mDeviceContext->PSSetShaderResources(0, 1, &texture);
         mDeviceContext->DrawIndexed(36, 0, 0); // 36 indices for one cube
     }
+
+    mSwapChain->Present(1, 0);
+}
+
+void Renderer::RenderStartScreenUI(HWND mHWnd)
+{
+    ClearColor({ 0.2f, 0.5f, 0.4f, 1.0f });
+
+    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //CHECK IF PLAYER WANTS TO START
+
+    // 2. Get the Back Buffer as a DXGI Surface
+    IDXGISurface1* gdiSurface = nullptr;
+    mSwapChain->GetBuffer(0, __uuidof(IDXGISurface1), (void**)&gdiSurface);
+
+    // 3. Get the HDC from the DXGI Surface (NOT the Window)
+    HDC hdc = GetDC(mHWnd);
+    gdiSurface->GetDC(FALSE, &hdc);
+
+    SetTextColor(hdc, RGB(255, 255, 255));
+    SetBkMode(hdc, TRANSPARENT);
+    
+    HFONT TitleFont = CreateFontW(35, 20, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    SelectObject(hdc, TitleFont);
+    std::string Header = "A 3D GRAPHICS GAME PROJECT";
+    TextOutA(hdc, 100, 100, Header.c_str(), Header.length());
+
+    std::string StartPrompt = "PRESS SPACE TO BEGIN";
+    TextOutA(hdc, 160, 200, StartPrompt.c_str(), StartPrompt.length());
+
+    //Release the DC 
+    gdiSurface->ReleaseDC(nullptr);
+    gdiSurface->Release();
 
     mSwapChain->Present(1, 0);
 }

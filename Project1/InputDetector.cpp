@@ -58,7 +58,7 @@ void InputDetector::InitialiseMouseDevice()
     mMouseDevice->Acquire(); //Acquire the device to start receiving input.
 }
 
-void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY, float &forward, float &side)
+void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY, float &forward, float &side, int &state)
 {
     currentTime = GetTickCount64() / 1000.0f;
     float deltaTime = currentTime - previousTime;
@@ -88,11 +88,18 @@ void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, i
         }
         else
         {
-            if (keyboardState[DIK_A] & 0x80)  side = -1.0f;
-            if (keyboardState[DIK_D] & 0x80) side = 1.0f;
+            if (state == 1)
+            {
+                if (keyboardState[DIK_A] & 0x80)  side = -1.0f;
+                if (keyboardState[DIK_D] & 0x80) side = 1.0f;
 
-            if (keyboardState[DIK_W] & 0x80) forward = 1.0f;
-            if (keyboardState[DIK_S] & 0x80) forward = -1.0f;
+                if (keyboardState[DIK_W] & 0x80) forward = 1.0f;
+                if (keyboardState[DIK_S] & 0x80) forward = -1.0f;
+            }
+            else if (state == 0)
+            {
+                if (keyboardState[DIK_SPACE] & 0x80) state = 1;
+            }
 
             if (keyboardState[DIK_ESCAPE] & 0x80)
             {
@@ -124,11 +131,14 @@ void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, i
         }
         else
         {
-            if (mouseState.lX > 0) cam.Yaw += 0.02f;
-            if (mouseState.lX < 0) cam.Yaw -= 0.02f;
+            if (state == 1)
+            {
+                if (mouseState.lX > 0) cam.Yaw += 0.02f;
+                if (mouseState.lX < 0) cam.Yaw -= 0.02f;
 
-            if (cam.Pitch < 2.0f)  if(mouseState.lY > 0) cam.Pitch += 0.02f;
-            if (cam.Pitch > -2.0f)  if(mouseState.lY < 0) cam.Pitch -= 0.02f;
+                if (cam.Pitch < 2.0f)  if (mouseState.lY > 0) cam.Pitch += 0.02f;
+                if (cam.Pitch > -2.0f)  if (mouseState.lY < 0) cam.Pitch -= 0.02f;
+            }
         }
     }
 }

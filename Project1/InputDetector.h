@@ -28,7 +28,7 @@ public:
     void InitialiseDirectInput();
     void InitialiseKeyboardDevice();
     void InitialiseMouseDevice();
-    void DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY, float& forward, float& side);
+    void DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY, float& forward, float& side, int& state);
 
 private:
     bool Pause = false;

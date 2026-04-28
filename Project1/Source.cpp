@@ -59,8 +59,14 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-
-        basicRenderer->RenderFrame();
+        if (basicRenderer->state == 0)
+        {
+            basicRenderer->RenderStartScreenUI(g_hWnd);
+        }
+        else if (basicRenderer->state == 1) 
+        {
+            basicRenderer->RenderFrame();
+        }
     }
 
     return (int)msg.wParam; // Return the exit code
