@@ -51,6 +51,7 @@ void Renderer::CompileTileMaps()
                 {
                     Mesh NewCube = Mesh(j, a, i, greenTex);
                     NewCube.TileIndex = 3;
+                    NewCube.ObjTransform.Scaler = 1.0f;
                     WorldMesh.push_back(NewCube);
                 }
             }
@@ -60,6 +61,7 @@ void Renderer::CompileTileMaps()
     PlayerBox.ObjTransform.PosX = mCam.Position.x;
     PlayerBox.ObjTransform.PosY = mCam.Position.y; //matching camera default position
     PlayerBox.ObjTransform.PosZ = mCam.Position.z;
+    PlayerBox.ObjTransform.Scaler = 1.0f;
 }
 
 void Renderer::CreateTriangleGeometry()
@@ -533,7 +535,7 @@ void Renderer::RenderFrame()
        }
     }
 
-    if (mCam.Position.y > WorldMesh[0].ObjTransform.PosY)
+    if (mCam.Position.y > WorldMesh[0].ObjTransform.PosY + (2 * WorldMesh[0].ObjTransform.Scaler))
     {
         mCam.Position.y -= 0.1f;
         PlayerBox.ObjTransform.PosY = mCam.Position.y;
