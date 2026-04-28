@@ -38,6 +38,7 @@ public:
 	XMMATRIX ReturnMatrix();
 	ID3D11ShaderResourceView* GetTexture() { return pTexture.Get(); }
 	ObjectTransform ObjTransform;
+	int TileIndex;
 private:
 	XMMATRIX WorldMatrix;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> pTexture;

@@ -23,6 +23,7 @@ void Renderer::CompileTileMaps()
 {
     ID3D11ShaderResourceView* whiteTex = LoadTexture(L"Textures\\White.jpg");
     ID3D11ShaderResourceView* blackTex = LoadTexture(L"Textures\\Black.jpg");
+    ID3D11ShaderResourceView* greenTex = LoadTexture(L"Textures\\Green.jpg");
 
     PlayerBox = Mesh(0, 0, 0, whiteTex);
 
@@ -38,11 +39,19 @@ void Renderer::CompileTileMaps()
                 if (TMmanager.TileMaps[a].TileMap[i][j] == 1) //Tilemap "a" at row "i" and column "j" //1 = default cube
                 {
                     Mesh NewCube = Mesh(j, a, 1 - i, whiteTex);
+                    NewCube.TileIndex = 1;
                     WorldMesh.push_back(NewCube);
                 }
                 else if (TMmanager.TileMaps[a].TileMap[i][j] == 2)
                 {
                     Mesh NewCube = Mesh(j, a, 1 - i, blackTex);
+                    NewCube.TileIndex = 2;
+                    WorldMesh.push_back(NewCube);
+                }
+                else if (TMmanager.TileMaps[a].TileMap[i][j] == 3)
+                {
+                    Mesh NewCube = Mesh(j, a, 1 - i, greenTex);
+                    NewCube.TileIndex = 3;
                     WorldMesh.push_back(NewCube);
                 }
             }
@@ -525,9 +534,14 @@ void Renderer::RenderFrame()
        OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
 
        bool isColliding = CollisionManager::CheckOBBOverlap(movingOBB, fixedOBB); //check bounding box collision against all other world objects
+
        if (isColliding) 
        { 
-          CanMove = false; 
+           if(WorldMesh[i].TileIndex == 3)
+           { 
+               WorldMesh.erase(WorldMesh.begin() + i);
+           }
+           else { CanMove = false; }
        } //if colliding with any, player should not move
     }
 
