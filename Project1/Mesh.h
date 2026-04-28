@@ -18,7 +18,7 @@ struct ObjectTransform
 	float RotY = 0.0f;
 	float RotZ = 0.0f;
 
-	float Scaler = 3.0f;
+	float Scaler = 1.0f;
 };
 
 struct OBB

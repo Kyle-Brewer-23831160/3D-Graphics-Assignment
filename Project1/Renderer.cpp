@@ -23,6 +23,7 @@ void Renderer::CompileTileMaps()
     ID3D11ShaderResourceView* whiteTex = LoadTexture(L"Textures\\White.jpg");
     ID3D11ShaderResourceView* blackTex = LoadTexture(L"Textures\\Black.jpg");
     ID3D11ShaderResourceView* greenTex = LoadTexture(L"Textures\\Green.jpg");
+    ID3D11ShaderResourceView* customTex = LoadTexture(L"Textures\\Custom.jpg");
 
     PlayerBox = Mesh(0, 0, 0, whiteTex);
 
@@ -537,7 +538,7 @@ void Renderer::RenderFrame()
        }
     }
 
-    if (mCam.Position.y > WorldMesh[0].ObjTransform.PosY + (2 * WorldMesh[0].ObjTransform.Scaler))
+    if (mCam.Position.y > WorldMesh[0].ObjTransform.PosY + (3 * WorldMesh[0].ObjTransform.Scaler))
     {
         mCam.Position.y -= 0.1f;
         PlayerBox.ObjTransform.PosY = mCam.Position.y;
