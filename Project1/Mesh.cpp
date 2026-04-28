@@ -7,9 +7,9 @@ Mesh::Mesh(int Row, int Column, int Depth, ID3D11ShaderResourceView* texture)
     ObjTransform.PosZ = 10;
 
 	pTexture = texture;
-	ObjTransform.PosX += Row * (1.003f * ObjTransform.Scaler);
-	ObjTransform.PosY += Column * (1.003f * ObjTransform.Scaler);
-    ObjTransform.PosZ += Depth * (1.003f * ObjTransform.Scaler);
+	ObjTransform.PosX += Row * (2.003f * ObjTransform.Scaler);
+	ObjTransform.PosY += Column * (2.003f * ObjTransform.Scaler);
+    ObjTransform.PosZ += Depth * (2.003f * ObjTransform.Scaler);
 
 	CreateWorldMatrix(ObjTransform);
 }
