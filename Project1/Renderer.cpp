@@ -348,8 +348,8 @@ void Renderer::CreateProjectionMatrix()
     mProjection = XMMatrixPerspectiveFovLH(
         XMConvertToRadians(45.0f), //FOV in angle
         width / height, //Aspect Ratio
-        0.1f, //Near plane
-        1000.0f //Far plane
+        0.5f, //Near plane
+        500.0f //Far plane
     );
 }
 
@@ -401,7 +401,7 @@ void Renderer::CreateStencilBuffer()
     depthStencilDesc.Height = 600;
     depthStencilDesc.MipLevels = 1;
     depthStencilDesc.ArraySize = 1;
-    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
     depthStencilDesc.SampleDesc.Count = 1;
     depthStencilDesc.SampleDesc.Quality = 0;
     depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -471,7 +471,9 @@ void Renderer::SetPipelineState()
     rasterDesc.FillMode = D3D11_FILL_SOLID;
     rasterDesc.CullMode = D3D11_CULL_NONE;
     rasterDesc.DepthClipEnable = TRUE;
-    rasterDesc.DepthBias = 1000;
+    rasterDesc.DepthBias = 1;
+    rasterDesc.SlopeScaledDepthBias = 1.0f;
+    rasterDesc.DepthBiasClamp = 0.0f;
     rasterDesc.ScissorEnable = FALSE;
     rasterDesc.MultisampleEnable = FALSE;
     rasterDesc.AntialiasedLineEnable = FALSE;
