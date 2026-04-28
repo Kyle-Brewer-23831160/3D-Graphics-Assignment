@@ -11,8 +11,8 @@ using namespace DirectX;
 struct ObjectTransform
 {
 	float PosX = 0.0f;
-	float PosY = -20.0f;
-	float PosZ = 10.0f;
+	float PosY = 0.0f;
+	float PosZ = 0.0f;
 
 	float RotX = 0.0f;
 	float RotY = 0.0f;

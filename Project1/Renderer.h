@@ -44,7 +44,6 @@ private:
     void CreateRenderTargetView();
     void CreateShaders();
     void CreateInputLayout();
-    void CreateViewMatrix();
     void CreateProjectionMatrix();
     void CreateWorldMatrix(float mAngle);
     void CreateConstantBuffer();
@@ -54,7 +53,7 @@ private:
 
     // Per-frame bindings
     void SetPipelineState();
-    void UpdateConstantBuffer(XMMATRIX OBJWorldMatrix);
+    void UpdateConstantBuffer(XMMATRIX OBJWorldMatrix, XMMATRIX camMat);
     void BindGeometry();
 
 public:

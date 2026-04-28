@@ -13,7 +13,6 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
     CreateStencilBuffer();
 
     CreateProjectionMatrix();
-    CreateViewMatrix();
     CreateConstantBuffer();
 
     CompileTileMaps();
@@ -38,19 +37,19 @@ void Renderer::CompileTileMaps()
             {
                 if (TMmanager.TileMaps[a].TileMap[i][j] == 1) //Tilemap "a" at row "i" and column "j" //1 = default cube
                 {
-                    Mesh NewCube = Mesh(j, a, 1 - i, whiteTex);
+                    Mesh NewCube = Mesh(j, a,  i, whiteTex);
                     NewCube.TileIndex = 1;
                     WorldMesh.push_back(NewCube);
                 }
                 else if (TMmanager.TileMaps[a].TileMap[i][j] == 2)
                 {
-                    Mesh NewCube = Mesh(j, a, 1 - i, blackTex);
+                    Mesh NewCube = Mesh(j, a, i, blackTex);
                     NewCube.TileIndex = 2;
                     WorldMesh.push_back(NewCube);
                 }
                 else if (TMmanager.TileMaps[a].TileMap[i][j] == 3)
                 {
-                    Mesh NewCube = Mesh(j, a, 1 - i, greenTex);
+                    Mesh NewCube = Mesh(j, a, i, greenTex);
                     NewCube.TileIndex = 3;
                     WorldMesh.push_back(NewCube);
                 }
@@ -58,9 +57,9 @@ void Renderer::CompileTileMaps()
         }
     }
 
-    PlayerBox.ObjTransform.PosX = 10;
-    PlayerBox.ObjTransform.PosY = -1.5; //matching camera default position
-    PlayerBox.ObjTransform.PosZ = -10;
+    PlayerBox.ObjTransform.PosX = mCam.Position.x;
+    PlayerBox.ObjTransform.PosY = mCam.Position.y; //matching camera default position
+    PlayerBox.ObjTransform.PosZ = mCam.Position.z;
 }
 
 void Renderer::CreateTriangleGeometry()
@@ -339,15 +338,6 @@ void Renderer::CreateInputLayout()
     mDevice->CreateInputLayout(inputElementDesc, 2, mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), mInputLayout.GetAddressOf());
 }
 
-void Renderer::CreateViewMatrix()
-{
-    mView = XMMatrixLookAtLH(
-        XMVectorSet(0.0f, 0.0f, -10.0f, 1.0f), //Cam is 10 steps back
-        XMVectorSet(0.0f, 0.0f, 50.0f, 1.0f), 
-        XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f)
-        );
-}
-
 void Renderer::CreateProjectionMatrix()
 {
     float width = float(rect.right - rect.left);
@@ -383,13 +373,11 @@ void Renderer::CreateConstantBuffer()
     if (FAILED(Result)) OutputDebugString (L"FAILED TO CREATE CONSTANT BUFFER\n"); 
 }
 
-void Renderer::UpdateConstantBuffer(XMMATRIX OBJWorldMatrix)
+void Renderer::UpdateConstantBuffer(XMMATRIX OBJWorldMatrix, XMMATRIX camMat)
 {
-    //----Matrices----
-    XMMATRIX camView = mCam.GetCamView();
-
     //if anything is wrong after movement do * mView
-    XMMATRIX wvp = OBJWorldMatrix * camView * mProjection;
+    XMMATRIX view = XMMatrixInverse(nullptr, camMat);
+    XMMATRIX wvp = OBJWorldMatrix * camMat * mProjection;
 
     //----Update GPU----
     ConstantBuffer CB;
@@ -541,8 +529,14 @@ void Renderer::RenderFrame()
            { 
                WorldMesh.erase(WorldMesh.begin() + i);
            }
-           else { CanMove = false; }
-       } //if colliding with any, player should not move
+           else { CanMove = false; } //if colliding with any, player should not move
+       }
+    }
+
+    if (mCam.Position.y > WorldMesh[0].ObjTransform.PosY)
+    {
+        mCam.Position.y -= 0.1f;
+        PlayerBox.ObjTransform.PosY = mCam.Position.y;
     }
 
     //-----MOVE PLAYER-----
@@ -554,10 +548,12 @@ void Renderer::RenderFrame()
     SetPipelineState();
     BindGeometry();
 
+    XMMATRIX cameraMatrix = mCam.GetCamView();
+
     for (int i = 0; i < WorldMesh.size(); i++)
     {
         WorldMesh[i].CreateWorldMatrix(WorldMesh[i].ObjTransform);
-        UpdateConstantBuffer(WorldMesh[i].ReturnMatrix());
+        UpdateConstantBuffer(WorldMesh[i].ReturnMatrix(), cameraMatrix);
         ID3D11ShaderResourceView* texture = WorldMesh[i].GetTexture();
         mDeviceContext->PSSetShaderResources(0, 1, &texture);
         mDeviceContext->DrawIndexed(36, 0, 0); // 36 indices for one cube
