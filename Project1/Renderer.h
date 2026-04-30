@@ -2,9 +2,9 @@
 #pragma once
 
 #include "Mesh.h"
-#include "InputDetector.h"
 #include "TileMap.h"
 #include "CollisionManager.h"
+#include "InputDetector.h"
 #include "WICTextureLoader.h"
 #include <d3dcompiler.h>
 #include <string>
@@ -103,6 +103,7 @@ public:
     float forward;
     float side;
 
-    //game state
+    //game states
     int state = 0;
+    int CorridorLoopCount;
 };

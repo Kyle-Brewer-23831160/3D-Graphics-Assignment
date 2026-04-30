@@ -529,20 +529,26 @@ void Renderer::RenderFrame()
 
     mDeviceContext->ClearDepthStencilView(mdepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0F, 0);
 
-    //----CHECK FOR VALID MOVEMENTS----
-    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //get inputs
-
     ObjectTransform transformSave = PlayerBox.ObjTransform; //create transform save
     PlayerBox.Move(forward, side, deltaTime, mCam.Yaw);//move player transform to new position
     OBB movingOBB = CollisionManager::BuildCubeOBB(PlayerBox.ObjTransform); //build orient bounding box at that position
 
     bool CanMove = true;
+    bool Grounded = false; //start false
+
+    ObjectTransform GroundTransform = PlayerBox.ObjTransform;
+    GroundTransform.PosY -= 0.5;
+    OBB GroundOBB = CollisionManager::BuildCubeOBB(GroundTransform);
     
     for (int i = 0; i < WorldMesh.size(); i++)
     {
        OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
-
        bool isColliding = CollisionManager::CheckOBBOverlap(movingOBB, fixedOBB); //check bounding box collision against all other world objects
+
+       if (!Grounded) //only run check if not seen as grounded
+       {
+           Grounded = CollisionManager::CheckOBBOverlap(GroundOBB, fixedOBB); //if grounded, set grounded to true, prevents other irrelivant objects from ruining the result
+       }
 
        if (isColliding) 
        { 
@@ -556,27 +562,36 @@ void Renderer::RenderFrame()
            }
            else if (WorldMesh[i].TileIndex == 5)
            {
-               //Teleport player 
-               for (int i = 0; i < WorldMesh.size(); i++)
+               if (CorridorLoopCount < 10)
                {
-                   if (WorldMesh[i].TileIndex == 4)
+                   //Teleport player 
+                   for (int i = 0; i < WorldMesh.size(); i++)
                    {
-                       mCam.Position.x = WorldMesh[i].ObjTransform.PosX + 1;
-                       mCam.Position.y = WorldMesh[i].ObjTransform.PosY + 3;
-                       mCam.Position.z = WorldMesh[i].ObjTransform.PosZ;
-                       mCam.Yaw = 0;
-                       PlayerBox.ObjTransform.PosX = mCam.Position.x;
-                       PlayerBox.ObjTransform.PosY = mCam.Position.y; //matching camera default position
-                       PlayerBox.ObjTransform.PosZ = mCam.Position.z;
-                       break;
+                       if (WorldMesh[i].TileIndex == 4)
+                       {
+                           mCam.Position.x = WorldMesh[i].ObjTransform.PosX + 1;
+                           mCam.Position.y = WorldMesh[i].ObjTransform.PosY + 3;
+                           mCam.Position.z = WorldMesh[i].ObjTransform.PosZ;
+                           mCam.Yaw = 0;
+                           PlayerBox.ObjTransform.PosX = mCam.Position.x;
+                           PlayerBox.ObjTransform.PosY = mCam.Position.y; //matching camera default position
+                           PlayerBox.ObjTransform.PosZ = mCam.Position.z;
+                           CorridorLoopCount++;
+                           break;
+                       }
+
                    }
+               }
+               else
+               {
+                   WorldMesh[i].TileIndex = 5;
                }
            }
            else { CanMove = false; } //if colliding with any, player should not move
        }
     }
 
-    if (mCam.Position.y > WorldMesh[0].ObjTransform.PosY + (3 * WorldMesh[0].ObjTransform.Scaler))
+    if (!Grounded) //once all valid mesh have been checked against, act on final verdict
     {
         mCam.Position.y -= 0.1f;
         PlayerBox.ObjTransform.PosY = mCam.Position.y;
@@ -602,12 +617,15 @@ void Renderer::RenderFrame()
         mDeviceContext->DrawIndexed(36, 0, 0); // 36 indices for one cube
     }
 
+    //----CHECK FOR VALID MOVEMENTS----
+    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //get inputs
+
     mSwapChain->Present(1, 0);
 }
 
 void Renderer::RenderStartScreenUI(HWND mHWnd)
 {
-    ClearColor({ 0.2f, 0.5f, 0.4f, 1.0f });
+    ClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
 
     detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //CHECK IF PLAYER WANTS TO START
 
