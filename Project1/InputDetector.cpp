@@ -133,11 +133,11 @@ void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, i
         {
             if (state == 1)
             {
-                if (mouseState.lX > 0) cam.Yaw += 0.02f;
-                if (mouseState.lX < 0) cam.Yaw -= 0.02f;
+                if (mouseState.lX > 0) cam.Yaw += 0.04f;
+                if (mouseState.lX < 0) cam.Yaw -= 0.04f;
 
-                if (cam.Pitch < 2.0f)  if (mouseState.lY > 0) cam.Pitch += 0.02f;
-                if (cam.Pitch > -2.0f)  if (mouseState.lY < 0) cam.Pitch -= 0.02f;
+                if (cam.Pitch < 2.0f)  if (mouseState.lY > 0) cam.Pitch += 0.04f;
+                if (cam.Pitch > -2.0f)  if (mouseState.lY < 0) cam.Pitch -= 0.04f;
             }
         }
     }

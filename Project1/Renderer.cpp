@@ -23,6 +23,7 @@ void Renderer::CompileTileMaps()
     ID3D11ShaderResourceView* whiteTex = LoadTexture(L"Textures\\White.jpg");
     ID3D11ShaderResourceView* blackTex = LoadTexture(L"Textures\\Black.jpg");
     ID3D11ShaderResourceView* greenTex = LoadTexture(L"Textures\\Green.jpg");
+    ID3D11ShaderResourceView* brownTex = LoadTexture(L"Textures\\Brown.jpg");
     ID3D11ShaderResourceView* customTex = LoadTexture(L"Textures\\Custom.jpg");
 
     PlayerBox = Mesh(0, 0, 0, whiteTex);
@@ -36,33 +37,47 @@ void Renderer::CompileTileMaps()
         {
             for (int j = 0; j < Columns; j++)
             {
-                if (TMmanager.TileMaps[a].TileMap[i][j] == 1) //Tilemap "a" at row "i" and column "j" //1 = default cube
+                if (TMmanager.TileMaps[a].TileMap[i][j] != 0)
                 {
-                    Mesh NewCube = Mesh(j, a,  i, whiteTex);
-                    NewCube.TileIndex = 1;
-                    WorldMesh.push_back(NewCube);
-                }
-                else if (TMmanager.TileMaps[a].TileMap[i][j] == 2)
-                {
-                    Mesh NewCube = Mesh(j, a, i, blackTex);
-                    NewCube.TileIndex = 2;
-                    WorldMesh.push_back(NewCube);
-                }
-                else if (TMmanager.TileMaps[a].TileMap[i][j] == 3)
-                {
-                    Mesh NewCube = Mesh(j, a, i, greenTex);
-                    NewCube.TileIndex = 3;
-                    NewCube.ObjTransform.Scaler = 1.0f;
+                    Mesh NewCube;
+
+                    if (TMmanager.TileMaps[a].TileMap[i][j] == 1) //Tilemap "a" at row "i" and column "j" //1 = default cube
+                    {
+                        NewCube = Mesh(j, a, i, whiteTex);
+                    }
+                    else if (TMmanager.TileMaps[a].TileMap[i][j] == 2)
+                    {
+                        NewCube = Mesh(j, a, i, blackTex);
+                    }
+                    else if (TMmanager.TileMaps[a].TileMap[i][j] == 3)
+                    {
+                        NewCube = Mesh(j, a, i, greenTex);
+                        NewCube.ObjTransform.Scaler = 1.0f;
+                    }
+                    else if (TMmanager.TileMaps[a].TileMap[i][j] == 4 || TMmanager.TileMaps[a].TileMap[i][j] == 5)
+                    {
+                        NewCube = Mesh(j, a, i, brownTex);
+                        NewCube.ObjTransform.Scaler = 1.0f;
+                    }
+                    else if (TMmanager.TileMaps[a].TileMap[i][j] == 6)
+                    {
+                        NewCube = Mesh(j, a, i, whiteTex);
+                        NewCube.ObjTransform.Scaler = 1.0f;
+                        mCam.Position.x = NewCube.ObjTransform.PosX;
+                        mCam.Position.y = NewCube.ObjTransform.PosY + 3;
+                        mCam.Position.z = NewCube.ObjTransform.PosZ;
+                        PlayerBox.ObjTransform.PosX = mCam.Position.x;
+                        PlayerBox.ObjTransform.PosY = mCam.Position.y; //matching camera default position
+                        PlayerBox.ObjTransform.PosZ = mCam.Position.z;
+                        PlayerBox.ObjTransform.Scaler = 1.0f;
+                    }
+
+                    NewCube.TileIndex = TMmanager.TileMaps[a].TileMap[i][j];
                     WorldMesh.push_back(NewCube);
                 }
             }
         }
     }
-
-    PlayerBox.ObjTransform.PosX = mCam.Position.x;
-    PlayerBox.ObjTransform.PosY = mCam.Position.y; //matching camera default position
-    PlayerBox.ObjTransform.PosZ = mCam.Position.z;
-    PlayerBox.ObjTransform.Scaler = 1.0f;
 }
 
 void Renderer::CreateTriangleGeometry()
@@ -534,6 +549,28 @@ void Renderer::RenderFrame()
            if(WorldMesh[i].TileIndex == 3)
            { 
                WorldMesh.erase(WorldMesh.begin() + i);
+           }
+           else if (WorldMesh[i].TileIndex == 4)
+           {
+               //do nothing
+           }
+           else if (WorldMesh[i].TileIndex == 5)
+           {
+               //Teleport player 
+               for (int i = 0; i < WorldMesh.size(); i++)
+               {
+                   if (WorldMesh[i].TileIndex == 4)
+                   {
+                       mCam.Position.x = WorldMesh[i].ObjTransform.PosX + 1;
+                       mCam.Position.y = WorldMesh[i].ObjTransform.PosY + 3;
+                       mCam.Position.z = WorldMesh[i].ObjTransform.PosZ;
+                       mCam.Yaw = 0;
+                       PlayerBox.ObjTransform.PosX = mCam.Position.x;
+                       PlayerBox.ObjTransform.PosY = mCam.Position.y; //matching camera default position
+                       PlayerBox.ObjTransform.PosZ = mCam.Position.z;
+                       break;
+                   }
+               }
            }
            else { CanMove = false; } //if colliding with any, player should not move
        }
