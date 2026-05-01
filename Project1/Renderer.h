@@ -30,7 +30,7 @@ public:
     explicit Renderer(HWND hwnd);
     ~Renderer() = default;
 
-    void RenderFrame();                 // Clear + bind pipeline + draw + present
+    void RenderFrame(HWND mHWnd);                 // Clear + bind pipeline + draw + present
     void RenderStartScreenUI(HWND mHWnd);
     void ClearColor(XMFLOAT4 color);    // Optional if you want to call it manually
 
@@ -56,6 +56,7 @@ private:
     void SetPipelineState();
     void UpdateConstantBuffer(XMMATRIX OBJWorldMatrix, XMMATRIX camMat);
     void BindGeometry();
+    void RenderLevelUI(HWND mHWnd, int collectables);
 
 public:
     HWND mHwnd = nullptr;
@@ -107,4 +108,5 @@ public:
     int state = 0;
     bool looptriggered;
     int coridoorLoopCount;
+    int collectableCount;
 };

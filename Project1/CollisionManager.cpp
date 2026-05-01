@@ -79,7 +79,6 @@ void CollisionManager::LoopHallwayCheck(vector<Mesh> wrldmesh, int index, Player
                     playertransform.PosY = cam.Position.y; //matching camera default position
                     playertransform.PosZ = cam.Position.z;
                     CorridorLoopCount++;
-                    OutputDebugString(L"what");
                     return;
                 }
             }

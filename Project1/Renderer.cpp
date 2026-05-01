@@ -520,7 +520,7 @@ void Renderer::ClearColor(XMFLOAT4 color)
     mDeviceContext->ClearRenderTargetView(mRenderTargetView.Get(), clearColor);
 }
 
-void Renderer::RenderFrame()
+void Renderer::RenderFrame(HWND mHWnd)
 {
     //----TIME----
     float CurrentTime = GetTickCount64() / 1000.0f;//obtain the elapsed system time and convert into seconds
@@ -572,6 +572,7 @@ void Renderer::RenderFrame()
             if (WorldMesh[i].TileIndex == 3)
             {
                 WorldMesh.erase(WorldMesh.begin() + i);
+                collectableCount++;
                 i--;
                 continue;
             }
@@ -611,10 +612,55 @@ void Renderer::RenderFrame()
         mDeviceContext->DrawIndexed(36, 0, 0); // 36 indices for one cube
     }
 
+    RenderLevelUI(mHWnd, collectableCount);
+
     mSwapChain->Present(1, 0);
 }
 
+void Renderer::RenderLevelUI(HWND mHWnd, int collectables)
+{
+    IDXGISurface1* gdiSurface = nullptr;
+    mSwapChain->GetBuffer(0, __uuidof(IDXGISurface1), (void**)&gdiSurface);
 
+    HDC hdc;
+    // Get the HDC specifically from the DXGI surface
+    gdiSurface->GetDC(FALSE, &hdc);
+
+    // --- 1. DRAW THE SQUARE ---
+    HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
+    HBRUSH hBrush = CreateSolidBrush(RGB(0, 255, 255));
+
+    HGDIOBJ oldPen = SelectObject(hdc, hPen);
+    HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
+
+    Rectangle(hdc, 40, 80, 300, 0);
+
+    // --- 2. DRAW THE TEXT ---
+    SetTextColor(hdc, RGB(255, 165, 0));
+    SetBkMode(hdc, TRANSPARENT);
+
+    HFONT TitleFont = CreateFontW(25, 12, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    HGDIOBJ oldFont = SelectObject(hdc, TitleFont);
+
+    std::string CollectablesMessage = std::to_string(collectables);
+
+    std::string Header = "Collectables Got: " + CollectablesMessage;
+    TextOutA(hdc, 60, 30, Header.c_str(), Header.length());
+
+    // --- 3. CLEAN UP ---
+    // Restore original objects to prevent GDI leaks
+    SelectObject(hdc, oldFont);
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
+
+    DeleteObject(TitleFont);
+    DeleteObject(hBrush);
+    DeleteObject(hPen);
+
+    // Release the surface DC so the swap chain can present
+    gdiSurface->ReleaseDC(nullptr);
+    gdiSurface->Release();
+}
 
 void Renderer::RenderStartScreenUI(HWND mHWnd)
 {

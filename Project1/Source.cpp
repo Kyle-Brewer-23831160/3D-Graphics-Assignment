@@ -65,7 +65,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
         }
         else if (basicRenderer->state == 1) 
         {
-            basicRenderer->RenderFrame();
+            basicRenderer->RenderFrame(g_hWnd);
         }
     }
 
