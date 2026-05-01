@@ -106,4 +106,5 @@ public:
     //game states
     int state = 0;
     int CorridorLoopCount;
+    bool looptriggered;
 };

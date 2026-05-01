@@ -57,7 +57,6 @@ void Renderer::CompileTileMaps()
                     else if (TMmanager.TileMaps[a].TileMap[i][j] == 4 || TMmanager.TileMaps[a].TileMap[i][j] == 5)
                     {
                         NewCube = Mesh(j, a, i, brownTex);
-                        NewCube.ObjTransform.Scaler = 1.0f;
                     }
                     else if (TMmanager.TileMaps[a].TileMap[i][j] == 6)
                     {
@@ -70,6 +69,10 @@ void Renderer::CompileTileMaps()
                         PlayerBox.ObjTransform.PosY = mCam.Position.y; //matching camera default position
                         PlayerBox.ObjTransform.PosZ = mCam.Position.z;
                         PlayerBox.ObjTransform.Scaler = 1.0f;
+                    }
+                    else if (TMmanager.TileMaps[a].TileMap[i][j] == 7 || TMmanager.TileMaps[a].TileMap[i][j] == 8)
+                    {
+                        NewCube = Mesh(j, a, i, blackTex);
                     }
 
                     NewCube.TileIndex = TMmanager.TileMaps[a].TileMap[i][j];
@@ -539,7 +542,7 @@ void Renderer::RenderFrame()
     ObjectTransform GroundTransform = PlayerBox.ObjTransform;
     GroundTransform.PosY -= 0.5;
     OBB GroundOBB = CollisionManager::BuildCubeOBB(GroundTransform);
-    
+
     for (int i = 0; i < WorldMesh.size(); i++)
     {
        OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
@@ -555,23 +558,21 @@ void Renderer::RenderFrame()
            if(WorldMesh[i].TileIndex == 3)
            { 
                WorldMesh.erase(WorldMesh.begin() + i);
+               i--;
+               continue;
            }
-           else if (WorldMesh[i].TileIndex == 4)
+
+           if (WorldMesh[i].TileIndex == 5)
            {
-               //do nothing
-           }
-           else if (WorldMesh[i].TileIndex == 5)
-           {
-               if (CorridorLoopCount < 10)
+               if (CorridorLoopCount < 4)
                {
-                   //Teleport player 
-                   for (int i = 0; i < WorldMesh.size(); i++)
+                   for (int j = 0; j < WorldMesh.size(); j++)
                    {
-                       if (WorldMesh[i].TileIndex == 4)
+                       if (WorldMesh[j].TileIndex == 4) //Teleport player to start of coridor
                        {
-                           mCam.Position.x = WorldMesh[i].ObjTransform.PosX + 1;
-                           mCam.Position.y = WorldMesh[i].ObjTransform.PosY + 3;
-                           mCam.Position.z = WorldMesh[i].ObjTransform.PosZ;
+                           mCam.Position.x = WorldMesh[j].ObjTransform.PosX + 1;
+                           mCam.Position.y = WorldMesh[j].ObjTransform.PosY + 3;
+                           mCam.Position.z = WorldMesh[j].ObjTransform.PosZ;
                            mCam.Yaw = 0;
                            PlayerBox.ObjTransform.PosX = mCam.Position.x;
                            PlayerBox.ObjTransform.PosY = mCam.Position.y; //matching camera default position
@@ -579,28 +580,63 @@ void Renderer::RenderFrame()
                            CorridorLoopCount++;
                            break;
                        }
-
                    }
+                   return;
                }
-               else
-               {
-                   WorldMesh[i].TileIndex = 5;
-               }
+               else { WorldMesh[i].TileIndex = 4; }
            }
-           else { CanMove = false; } //if colliding with any, player should not move
-       }
-    }
 
-    if (!Grounded) //once all valid mesh have been checked against, act on final verdict
-    {
-        mCam.Position.y -= 0.1f;
-        PlayerBox.ObjTransform.PosY = mCam.Position.y;
+           if (WorldMesh[i].TileIndex == 1 ||
+               WorldMesh[i].TileIndex == 2 ||
+               WorldMesh[i].TileIndex == 3 ||
+               WorldMesh[i].TileIndex == 1 ||
+               WorldMesh[i].TileIndex == 5 ||
+               WorldMesh[i].TileIndex == 6 ||
+               WorldMesh[i].TileIndex == 7 ||
+               WorldMesh[i].TileIndex == 8) {
+               CanMove = false;
+           } //if colliding with any, player should not move
+       }  
     }
 
     //-----MOVE PLAYER-----
     if(CanMove) { mCam.Move(forward, side, deltaTime); } //if can move, update playercam and leave playerbox transform at new position
     else { PlayerBox.ObjTransform = transformSave; } //if cant move, revert changes to player box transform.
 
+    for (int i = 0; i < WorldMesh.size(); i++)
+    {
+        OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
+        bool isColliding = CollisionManager::CheckOBBOverlap(movingOBB, fixedOBB); //check bounding box collision against all other world objects
+
+        if (isColliding)
+        {
+            if (WorldMesh[i].TileIndex == 7)
+            {
+                for (int a = 0; a < WorldMesh.size(); a++)
+                {
+                    if (WorldMesh[a].TileIndex == 8) //Teleport player to stop of tunnel loop
+                    {
+                        PlayerBox.ObjTransform.PosX = WorldMesh[a].ObjTransform.PosX + 0.5f;
+                        PlayerBox.ObjTransform.PosY = WorldMesh[a].ObjTransform.PosY - 2.0f; //matching camera default position
+                        PlayerBox.ObjTransform.PosZ = WorldMesh[a].ObjTransform.PosZ + 1.0f;
+                        mCam.Position.x = PlayerBox.ObjTransform.PosX;
+                        mCam.Position.y = PlayerBox.ObjTransform.PosY;
+                        mCam.Position.z = PlayerBox.ObjTransform.PosZ;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!Grounded) //once all valid mesh have been checked against, act on final verdict
+    {
+        mCam.Position.y -= 0.1f;
+        PlayerBox.ObjTransform.PosX = mCam.Position.x;
+        PlayerBox.ObjTransform.PosY = mCam.Position.y;
+        PlayerBox.ObjTransform.PosZ = mCam.Position.z;
+    }
+    
 
     //---RENDER WORLD----
     SetPipelineState();
@@ -618,10 +654,11 @@ void Renderer::RenderFrame()
     }
 
     //----CHECK FOR VALID MOVEMENTS----
-    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //get inputs
+    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //get inputs (at bottom as if above world matrices creation, can cause bug where holding inputs as pressing space to start causes player to spawn in a void)
 
     mSwapChain->Present(1, 0);
 }
+
 
 void Renderer::RenderStartScreenUI(HWND mHWnd)
 {
