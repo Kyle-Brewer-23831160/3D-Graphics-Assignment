@@ -24,7 +24,6 @@ void Renderer::CompileTileMaps()
     ID3D11ShaderResourceView* blackTex = LoadTexture(L"Textures\\Black.jpg");
     ID3D11ShaderResourceView* greenTex = LoadTexture(L"Textures\\Green.jpg");
     ID3D11ShaderResourceView* brownTex = LoadTexture(L"Textures\\Brown.jpg");
-    ID3D11ShaderResourceView* customTex = LoadTexture(L"Textures\\Custom.jpg");
 
     PlayerBox = Mesh(0, 0, 0, whiteTex);
 
@@ -532,10 +531,9 @@ void Renderer::RenderFrame()
 
     mDeviceContext->ClearDepthStencilView(mdepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0F, 0);
 
-    ObjectTransform transformSave = PlayerBox.ObjTransform; //create transform save
-    PlayerBox.Move(forward, side, deltaTime, mCam.Yaw);//move player transform to new position
-    OBB movingOBB = CollisionManager::BuildCubeOBB(PlayerBox.ObjTransform); //build orient bounding box at that position
-
+    //////////////////////////////////////////////////////////////
+    ////////// PLAYER MOVEMENT/COLISSION MANAGER START //////////
+    ////////////////////////////////////////////////////////////
     bool CanMove = true;
     bool Grounded = false; //start false
 
@@ -543,64 +541,20 @@ void Renderer::RenderFrame()
     GroundTransform.PosY -= 0.5;
     OBB GroundOBB = CollisionManager::BuildCubeOBB(GroundTransform);
 
+    ObjectTransform transformSave = PlayerBox.ObjTransform; //create transform save
+    PlayerBox.Move(forward, side, deltaTime, mCam.Yaw);//move player transform to new position
+    OBB movingOBB = CollisionManager::BuildCubeOBB(PlayerBox.ObjTransform); //build orient bounding box at that position
+
     for (int i = 0; i < WorldMesh.size(); i++)
     {
-       OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
-       bool isColliding = CollisionManager::CheckOBBOverlap(movingOBB, fixedOBB); //check bounding box collision against all other world objects
+        OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
+        bool isColliding = CollisionManager::CheckOBBOverlap(movingOBB, fixedOBB); //check bounding box collision against all other world objects
 
-       if (!Grounded) //only run check if not seen as grounded
-       {
-           Grounded = CollisionManager::CheckOBBOverlap(GroundOBB, fixedOBB); //if grounded, set grounded to true, prevents other irrelivant objects from ruining the result
-       }
-
-       if (isColliding) 
-       { 
-           if(WorldMesh[i].TileIndex == 3)
-           { 
-               WorldMesh.erase(WorldMesh.begin() + i);
-               i--;
-               continue;
-           }
-
-           if (WorldMesh[i].TileIndex == 5)
-           {
-               if (CorridorLoopCount < 4)
-               {
-                   for (int j = 0; j < WorldMesh.size(); j++)
-                   {
-                       if (WorldMesh[j].TileIndex == 4) //Teleport player to start of coridor
-                       {
-                           mCam.Position.x = WorldMesh[j].ObjTransform.PosX + 1;
-                           mCam.Position.y = WorldMesh[j].ObjTransform.PosY + 3;
-                           mCam.Position.z = WorldMesh[j].ObjTransform.PosZ;
-                           mCam.Yaw = 0;
-                           PlayerBox.ObjTransform.PosX = mCam.Position.x;
-                           PlayerBox.ObjTransform.PosY = mCam.Position.y; //matching camera default position
-                           PlayerBox.ObjTransform.PosZ = mCam.Position.z;
-                           CorridorLoopCount++;
-                           break;
-                       }
-                   }
-                   return;
-               }
-               else { WorldMesh[i].TileIndex = 4; }
-           }
-
-           if (WorldMesh[i].TileIndex == 1 ||
-               WorldMesh[i].TileIndex == 2 ||
-               WorldMesh[i].TileIndex == 3 ||
-               WorldMesh[i].TileIndex == 1 ||
-               WorldMesh[i].TileIndex == 5 ||
-               WorldMesh[i].TileIndex == 6 ||
-               WorldMesh[i].TileIndex == 7 ||
-               WorldMesh[i].TileIndex == 8) {
-               CanMove = false;
-           } //if colliding with any, player should not move
-       }  
+        if(isColliding) CollisionManager::MeshIndexCheck(WorldMesh[i].TileIndex, CanMove);
     }
 
     //-----MOVE PLAYER-----
-    if(CanMove) { mCam.Move(forward, side, deltaTime); } //if can move, update playercam and leave playerbox transform at new position
+    if (CanMove) { mCam.Move(forward, side, deltaTime); } //if can move, update playercam and leave playerbox transform at new position
     else { PlayerBox.ObjTransform = transformSave; } //if cant move, revert changes to player box transform.
 
     for (int i = 0; i < WorldMesh.size(); i++)
@@ -608,24 +562,24 @@ void Renderer::RenderFrame()
         OBB fixedOBB = CollisionManager::BuildCubeOBB(WorldMesh[i].ObjTransform);
         bool isColliding = CollisionManager::CheckOBBOverlap(movingOBB, fixedOBB); //check bounding box collision against all other world objects
 
+        if (!Grounded) //only run check if not seen as grounded
+        {
+            Grounded = CollisionManager::CheckOBBOverlap(GroundOBB, fixedOBB); //if grounded, set grounded to true, prevents other irrelivant objects from ruining the result
+        }
+
         if (isColliding)
         {
-            if (WorldMesh[i].TileIndex == 7)
+            if (WorldMesh[i].TileIndex == 3)
             {
-                for (int a = 0; a < WorldMesh.size(); a++)
-                {
-                    if (WorldMesh[a].TileIndex == 8) //Teleport player to stop of tunnel loop
-                    {
-                        PlayerBox.ObjTransform.PosX = WorldMesh[a].ObjTransform.PosX + 0.5f;
-                        PlayerBox.ObjTransform.PosY = WorldMesh[a].ObjTransform.PosY - 2.0f; //matching camera default position
-                        PlayerBox.ObjTransform.PosZ = WorldMesh[a].ObjTransform.PosZ + 1.0f;
-                        mCam.Position.x = PlayerBox.ObjTransform.PosX;
-                        mCam.Position.y = PlayerBox.ObjTransform.PosY;
-                        mCam.Position.z = PlayerBox.ObjTransform.PosZ;
-                        break;
-                    }
-                }
+                WorldMesh.erase(WorldMesh.begin() + i);
+                i--;
+                continue;
             }
+
+            CollisionManager::FallingTunnelCheck(WorldMesh, i, mCam, PlayerBox.ObjTransform);
+            CollisionManager::LoopHallwayCheck(WorldMesh, i, mCam, PlayerBox.ObjTransform, coridoorLoopCount);
+
+            break; //break out of for loop, the collision had been accounted for
         }
     }
 
@@ -636,28 +590,30 @@ void Renderer::RenderFrame()
         PlayerBox.ObjTransform.PosY = mCam.Position.y;
         PlayerBox.ObjTransform.PosZ = mCam.Position.z;
     }
-    
+
+    //----CHECK FOR VALID MOVEMENTS----
+    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //get inputs (at bottom as if above world matrices creation, can cause bug where holding inputs as pressing space to start causes player to spawn in a void)
+
+    ////////////////////////////////////////////////////////////
+    ////////// PLAYER MOVEMENT/COLISSION MANAGER END //////////
+    //////////////////////////////////////////////////////////
 
     //---RENDER WORLD----
     SetPipelineState();
     BindGeometry();
 
-    XMMATRIX cameraMatrix = mCam.GetCamView();
-
     for (int i = 0; i < WorldMesh.size(); i++)
     {
         WorldMesh[i].CreateWorldMatrix(WorldMesh[i].ObjTransform);
-        UpdateConstantBuffer(WorldMesh[i].ReturnMatrix(), cameraMatrix);
+        UpdateConstantBuffer(WorldMesh[i].ReturnMatrix(), mCam.GetCamView());
         ID3D11ShaderResourceView* texture = WorldMesh[i].GetTexture();
         mDeviceContext->PSSetShaderResources(0, 1, &texture);
         mDeviceContext->DrawIndexed(36, 0, 0); // 36 indices for one cube
     }
 
-    //----CHECK FOR VALID MOVEMENTS----
-    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //get inputs (at bottom as if above world matrices creation, can cause bug where holding inputs as pressing space to start causes player to spawn in a void)
-
     mSwapChain->Present(1, 0);
 }
+
 
 
 void Renderer::RenderStartScreenUI(HWND mHWnd)

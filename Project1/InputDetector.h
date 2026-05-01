@@ -9,8 +9,10 @@
 #include <dinput.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include <vector>
 
 using namespace Microsoft::WRL;
+using namespace std;
 
 class InputDetector
 {
