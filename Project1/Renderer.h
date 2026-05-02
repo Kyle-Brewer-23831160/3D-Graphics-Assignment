@@ -87,6 +87,13 @@ public:
     ComPtr<ID3D11ShaderResourceView> mTextureView;
     ComPtr<ID3D11BlendState> TextureBlend;
 
+    ID3D11ShaderResourceView* whiteTex;
+    ID3D11ShaderResourceView* blackTex;
+    ID3D11ShaderResourceView* greenTex;
+    ID3D11ShaderResourceView* brownTex;
+    ID3D11ShaderResourceView* blueTex;
+    ID3D11ShaderResourceView* redTex;
+    ID3D11ShaderResourceView* purpleTex;
 
     float mPreviousTime;
     float mAngle;

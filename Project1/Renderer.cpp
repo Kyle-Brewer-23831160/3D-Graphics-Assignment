@@ -20,10 +20,13 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
 
 void Renderer::CompileTileMaps()
 {
-    ID3D11ShaderResourceView* whiteTex = LoadTexture(L"Textures\\White.jpg");
-    ID3D11ShaderResourceView* blackTex = LoadTexture(L"Textures\\Black.jpg");
-    ID3D11ShaderResourceView* greenTex = LoadTexture(L"Textures\\Green.jpg");
-    ID3D11ShaderResourceView* brownTex = LoadTexture(L"Textures\\Brown.jpg");
+     whiteTex = LoadTexture(L"Textures\\White.jpg");
+     blackTex = LoadTexture(L"Textures\\Black.jpg");
+     greenTex = LoadTexture(L"Textures\\Green.jpg");
+     brownTex = LoadTexture(L"Textures\\Brown.jpg");
+     blueTex = LoadTexture(L"Textures\\Blue.jpg");
+     redTex = LoadTexture(L"Textures\\red.png");
+     purpleTex = LoadTexture(L"Textures\\Purple.png");
 
     PlayerBox = Mesh(0, 0, 0, whiteTex);
 
@@ -72,6 +75,22 @@ void Renderer::CompileTileMaps()
                     else if (TMmanager.TileMaps[a].TileMap[i][j] == 7 || TMmanager.TileMaps[a].TileMap[i][j] == 8)
                     {
                         NewCube = Mesh(j, a, i, blackTex); //not actually going to be rendered
+                    }
+                    else if (TMmanager.TileMaps[a].TileMap[i][j] == 9)
+                    {
+                        NewCube = Mesh(j, a, i, redTex);
+                    }
+                    else if (TMmanager.TileMaps[a].TileMap[i][j] == 10)
+                    {
+                        NewCube = Mesh(j, a, i, greenTex);
+                    }
+                    else if (TMmanager.TileMaps[a].TileMap[i][j] == 11)
+                    {
+                        NewCube = Mesh(j, a, i, blueTex);
+                    }
+                    else if (TMmanager.TileMaps[a].TileMap[i][j] == 12)
+                    {
+                        NewCube = Mesh(j, a, i, purpleTex);
                     }
                     else if (TMmanager.TileMaps[a].TileMap[i][j] == 13 || TMmanager.TileMaps[a].TileMap[i][j] == 14)
                     {
@@ -560,7 +579,7 @@ void Renderer::RenderFrame(HWND mHWnd)
 
             CollisionManager::FallingTunnelCheck(WorldMesh, i, mCam, PlayerBox.ObjTransform);
             CollisionManager::LoopHallwayCheck(WorldMesh, i, mCam, PlayerBox.ObjTransform, coridoorLoopCount);
-            CollisionManager::LoopIntoRoom(WorldMesh, i, mCam, PlayerBox.ObjTransform);
+            CollisionManager::LoopIntoRoom(WorldMesh, i, mCam, PlayerBox.ObjTransform, greenTex, blueTex, redTex);
 
             break; //break out of for loop, the collision had been accounted for
         }
