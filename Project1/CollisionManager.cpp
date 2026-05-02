@@ -88,6 +88,28 @@ void CollisionManager::LoopHallwayCheck(vector<Mesh> wrldmesh, int index, Player
     }
 }
 
+void CollisionManager::LoopIntoRoom(vector<Mesh> wrldmesh, int index, PlayerCamera& cam, ObjectTransform& playertransform)
+{
+    if (wrldmesh[index].TileIndex == 13) //if the colliding tile is of index 13
+    {
+        for (int i = 0; i < wrldmesh.size(); i++) //issue is that this loop doesnt stop when first tile of index 4 is found
+        {
+            if (wrldmesh[i].TileIndex == 14) //Teleport player to start of coridor
+            {
+
+                cam.Position.x = wrldmesh[i].ObjTransform.PosX + 1;
+                cam.Position.y = wrldmesh[i].ObjTransform.PosY + 1;
+                cam.Position.z = wrldmesh[i].ObjTransform.PosZ;
+                cam.Yaw = -3.15;
+                playertransform.PosX = cam.Position.x;
+                playertransform.PosY = cam.Position.y; //matching camera default position
+                playertransform.PosZ = cam.Position.z;
+                return;
+            }
+        }
+    }
+}
+
 bool CollisionManager::MeshIndexCheck(int tileIndex, bool& CanMove)
 {
     if (tileIndex == 1 ||

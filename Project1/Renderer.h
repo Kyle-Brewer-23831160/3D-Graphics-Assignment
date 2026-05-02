@@ -8,6 +8,8 @@
 #include "WICTextureLoader.h"
 #include <d3dcompiler.h>
 #include <string>
+#include <fstream>
+#include <sstream>
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -44,6 +46,7 @@ private:
     void CreateSwapChain();
     void CreateRenderTargetView();
     void CreateShaders();
+    std::string ReadHLSLFile(const std::string& fileName);
     void CreateInputLayout();
     void CreateProjectionMatrix();
     void CreateWorldMatrix(float mAngle);
@@ -82,6 +85,7 @@ public:
     //Texture
     ComPtr<ID3D11SamplerState> mSamplerState;
     ComPtr<ID3D11ShaderResourceView> mTextureView;
+    ComPtr<ID3D11BlendState> TextureBlend;
 
 
     float mPreviousTime;

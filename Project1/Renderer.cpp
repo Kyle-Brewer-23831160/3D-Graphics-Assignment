@@ -51,7 +51,7 @@ void Renderer::CompileTileMaps()
                     else if (TMmanager.TileMaps[a].TileMap[i][j] == 3)
                     {
                         NewCube = Mesh(j, a, i, greenTex);
-                        NewCube.ObjTransform.Scaler = 1.0f;
+                        NewCube.ObjTransform.Scaler = 0.35f;
                     }
                     else if (TMmanager.TileMaps[a].TileMap[i][j] == 4 || TMmanager.TileMaps[a].TileMap[i][j] == 5)
                     {
@@ -71,9 +71,12 @@ void Renderer::CompileTileMaps()
                     }
                     else if (TMmanager.TileMaps[a].TileMap[i][j] == 7 || TMmanager.TileMaps[a].TileMap[i][j] == 8)
                     {
-                        NewCube = Mesh(j, a, i, blackTex);
+                        NewCube = Mesh(j, a, i, blackTex); //not actually going to be rendered
                     }
-
+                    else if (TMmanager.TileMaps[a].TileMap[i][j] == 13 || TMmanager.TileMaps[a].TileMap[i][j] == 14)
+                    {
+                        NewCube = Mesh(j, a, i, whiteTex); //not actually going to be rendered
+                    }
                     NewCube.TileIndex = TMmanager.TileMaps[a].TileMap[i][j];
                     WorldMesh.push_back(NewCube);
                 }
@@ -267,87 +270,65 @@ void Renderer::CreateRenderTargetView()
 
 void Renderer::CreateShaders()
 {
+    ComPtr<ID3DBlob> vsBlob;
+    ComPtr<ID3DBlob> psBlob;
     ComPtr<ID3DBlob> errorBlob;
-    const std::string pixelShaderCode  = R"(
 
-    struct PS_INPUT
+    std::string vsCode = ReadHLSLFile("VertexShader.hlsl");
+
+
+    if (vsCode.empty()) {
+        OutputDebugString(L"Vertex Shader file not found or empty!\n");
+        return;
+    }
+
+    D3DCompile(vsCode.c_str(), vsCode.size(), nullptr, nullptr, nullptr,
+        "main", "vs_5_0", 0, 0, &vsBlob, &errorBlob);
+
+    mDevice->CreateVertexShader(
+        vsBlob->GetBufferPointer(),
+        vsBlob->GetBufferSize(),
+        nullptr,
+        mVertexShader.GetAddressOf()
+    );
+
+    std::string psCode = ReadHLSLFile("PixelShader.hlsl");
+
+    if (psCode.empty())
     {
-        float4 position : SV_POSITION;
-        float2 inTexCoord    : TEXCOORD;
-    };
+        OutputDebugString(L"Pixel Shader file not found or empty!\n");
+        return;
+    }
 
-    Texture2D texObject : register(t0);
-    SamplerState objSampleState : register(s0);
+    D3DCompile(psCode.c_str(), psCode.size(), nullptr, nullptr, nullptr,
+        "main", "ps_5_0", 0, 0, &psBlob, &errorBlob);
 
-    float4 main(PS_INPUT input) : SV_TARGET
+    mDevice->CreatePixelShader(
+        psBlob->GetBufferPointer(),
+        psBlob->GetBufferSize(),
+        nullptr,
+        mPixelShader.GetAddressOf()
+    );
+
+    mVertexShaderBlob = vsBlob;
+}
+
+std::string Renderer::ReadHLSLFile(const std::string& fileName)
+{
+    std::string absolutePath = fileName; // Assuming "Shaders" folder in the project directory.
+
+    std::ifstream file(absolutePath);
+    if (!file.is_open())
     {
-        float3 pixelcolour = texObject.Sample(objSampleState, input.inTexCoord);
-        return float4(pixelcolour, 1.0f);
-    }
-    )";
-
-    D3DCompile(pixelShaderCode.c_str(), pixelShaderCode.length(), nullptr, nullptr, nullptr, "main", "ps_5_0",
-        D3DCOMPILE_ENABLE_STRICTNESS, 0, &mVertexShaderBlob, &errorBlob);
-
-    if (errorBlob.Get() != nullptr && errorBlob->GetBufferPointer() != nullptr)
-        OutputDebugString((LPCWSTR)errorBlob->GetBufferPointer());
-    if (FAILED(mDevice->CreatePixelShader(mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), nullptr, mPixelShader.GetAddressOf())))
-    {
-        OutputDebugString(L"Failed to craete Pixel Shader!\n");
-        abort();
-    }
-    else {
-        OutputDebugString(L"Successful to craete Pixel Shader!\n");
-
+        OutputDebugString(L"failed to read a shader file");
+        return "";
     }
 
+    std::stringstream buffer;
+    buffer << file.rdbuf(); // Read file content
+    file.close();
 
-
-    ComPtr<ID3DBlob> errorBlob1;
-    const std::string vertexShaderCode = R"(
-
-                    cbuffer ConstantBuffer : register(b0)
-                    {
-                        matrix WVP;
-                    }
-
-                    struct vertexIn
-                    {
-                        float3 position : POSITION;
-                        float2 inTexCoord    : TEXCOORD;
-                    };
-
-                    struct vertexOut
-                    {
-                       float4 position : SV_POSITION;
-                       float2 outTexCoord : TEXCOORD;
-                    };
-
-                    vertexOut main(vertexIn input)
-                    {
-                        vertexOut output;
-                        output.position = mul(float4(input.position, 1.0f), WVP);
-                        output.outTexCoord = input.inTexCoord;      
-                        return output;
-                    }
-                )";
-
-
-    D3DCompile(vertexShaderCode.c_str(), vertexShaderCode.length(), nullptr, nullptr, nullptr, "main", "vs_5_0",
-        D3DCOMPILE_ENABLE_STRICTNESS, 0, &mVertexShaderBlob, &errorBlob1);
-
-    if (errorBlob1.Get() != nullptr && errorBlob1->GetBufferPointer() != nullptr)
-        OutputDebugString((LPCWSTR)errorBlob1->GetBufferPointer());
-
-    if (FAILED(mDevice->CreateVertexShader(mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), nullptr, mVertexShader.GetAddressOf())))
-    {
-        OutputDebugString(L"Failed to craete Vertex Shader!\n");
-        abort();
-    }
-    else {
-        OutputDebugString(L"Successful to craete Vertex Shader!\n");
-
-    }
+    return buffer.str(); // Return as std::string
 }
 
 void Renderer::CreateInputLayout()
@@ -579,6 +560,7 @@ void Renderer::RenderFrame(HWND mHWnd)
 
             CollisionManager::FallingTunnelCheck(WorldMesh, i, mCam, PlayerBox.ObjTransform);
             CollisionManager::LoopHallwayCheck(WorldMesh, i, mCam, PlayerBox.ObjTransform, coridoorLoopCount);
+            CollisionManager::LoopIntoRoom(WorldMesh, i, mCam, PlayerBox.ObjTransform);
 
             break; //break out of for loop, the collision had been accounted for
         }
@@ -605,6 +587,8 @@ void Renderer::RenderFrame(HWND mHWnd)
 
     for (int i = 0; i < WorldMesh.size(); i++)
     {
+        if (WorldMesh[i].TileIndex == 13 || WorldMesh[i].TileIndex == 14) continue;
+
         WorldMesh[i].CreateWorldMatrix(WorldMesh[i].ObjTransform);
         UpdateConstantBuffer(WorldMesh[i].ReturnMatrix(), mCam.GetCamView());
         ID3D11ShaderResourceView* texture = WorldMesh[i].GetTexture();
