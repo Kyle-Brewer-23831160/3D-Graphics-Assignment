@@ -2,14 +2,13 @@
 #pragma comment (lib, "dinput8.lib")
 #pragma comment (lib, "dxguid.lib")
 
-
-
 #include "Mesh.h"
 #include "PlayerCamera.h"
 #include <dinput.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <vector>
+#include "Lighting.h"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -30,7 +29,7 @@ public:
     void InitialiseDirectInput();
     void InitialiseKeyboardDevice();
     void InitialiseMouseDevice();
-    void DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY, float& forward, float& side, int& state);
+    void DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY, float& forward, float& side, int& state, Lighting& light);
 
 private:
     bool Pause = false;

@@ -58,7 +58,7 @@ void InputDetector::InitialiseMouseDevice()
     mMouseDevice->Acquire(); //Acquire the device to start receiving input.
 }
 
-void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY, float &forward, float &side, int &state)
+void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, int ScreenSizeY, float &forward, float &side, int &state, Lighting& light)
 {
     currentTime = GetTickCount64() / 1000.0f;
     float deltaTime = currentTime - previousTime;
@@ -95,6 +95,8 @@ void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, i
 
                 if (keyboardState[DIK_W] & 0x80) forward = 1.0f;
                 if (keyboardState[DIK_S] & 0x80) forward = -1.0f;
+
+                if (keyboardState[DIK_L] & 0x80) light.SetAmbientIntensity(light.GetAmbientIntensity() - 0.001f);
             }
             else if (state == 0)
             {

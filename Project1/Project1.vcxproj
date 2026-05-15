@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="InputDetector.cpp" />
+    <ClCompile Include="Lighting.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PlayerCamera.cpp" />
     <ClCompile Include="Renderer.cpp" />
@@ -144,6 +145,7 @@
   <ItemGroup>
     <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="InputDetector.h" />
+    <ClInclude Include="Lighting.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="PlayerCamera.h" />
     <ClInclude Include="Renderer.h" />

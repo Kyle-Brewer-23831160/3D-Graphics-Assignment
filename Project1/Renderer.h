@@ -18,12 +18,20 @@ using namespace DirectX;
 struct ConstantBuffer
 {
     XMMATRIX WVP;
+    XMFLOAT3 lightColour;
+    float ambientIntentsity;
+
+    XMMATRIX world;
+    XMMATRIX normalMatrix;
+    XMFLOAT3 LightDir;
+    float diffuseIntensity;
 };
 
 struct VertexData
 {
     XMFLOAT3 position;
     XMFLOAT2 texCoord;
+    XMFLOAT3 noramal;
 };
 
 class Renderer
@@ -114,6 +122,11 @@ public:
     XMMATRIX mProjection;
     float forward;
     float side;
+
+    //Light
+    Lighting mLight;
+    XMFLOAT3 color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    XMFLOAT3 dir = XMFLOAT3(2.0f, 1.0f, 2.0f);
 
     //game states
     int state = 0;

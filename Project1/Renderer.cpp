@@ -16,6 +16,8 @@ Renderer::Renderer(HWND hwnd) : mHwnd(hwnd)
     CreateConstantBuffer();
 
     CompileTileMaps();
+
+    mLight = Lighting(color, 0.2f, dir, 1.0f);
 }
 
 void Renderer::CompileTileMaps()
@@ -109,40 +111,40 @@ void Renderer::CreateTriangleGeometry()
     VertexData vertices[] =
  {
    // Front Face
-   { {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f} },
-   { {-1.0f, 1.0f, -1.0f}, {0.0f, 0.0f} },
-   { { 1.0f, 1.0f, -1.0f}, {1.0f, 0.0f} },
-   { { 1.0f, -1.0f, -1.0f}, {1.0f, 1.0f} },
+   { {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f }},
+   { {-1.0f, 1.0f, -1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f } },
+   { { 1.0f, 1.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f } },
+   { { 1.0f, -1.0f, -1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f } },
  
    // Back Face
-   { {-1.0f, -1.0f, 1.0f}, {1.0f, 1.0f} },
-   { { 1.0f, -1.0f, 1.0f}, {0.0f, 1.0f} },
-   { { 1.0f, 1.0f, 1.0f}, {0.0f, 0.0f} },
-   { {-1.0f, 1.0f, 1.0f}, {1.0f, 0.0f} },
+   { {-1.0f, -1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f } },
+   { { 1.0f, -1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f } },
+   { { 1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f } },
+   { {-1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f } },
  
    // Top Face
-   { {-1.0f, 1.0f, -1.0f}, {0.0f, 1.0f} },
-   { {-1.0f, 1.0f, 1.0f}, {0.0f, 0.0f} },
-   { { 1.0f, 1.0f, 1.0f}, {1.0f, 0.0f} },
-   { { 1.0f, 1.0f, -1.0f}, {1.0f, 1.0f} },
+   { {-1.0f, 1.0f, -1.0f}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f } },
+   { {-1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f } },
+   { { 1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f } },
+   { { 1.0f, 1.0f, -1.0f}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f } },
  
    // Bottom Face
-   { {-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f} },
-   { { 1.0f, -1.0f, -1.0f}, {0.0f, 1.0f} },
-   { { 1.0f, -1.0f, 1.0f}, {0.0f, 0.0f} },
-   { {-1.0f, -1.0f, 1.0f}, {1.0f, 0.0f} },
+   { {-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f}, {0.0f, -1.0f, 0.0f } },
+   { { 1.0f, -1.0f, -1.0f}, {0.0f, 1.0f}, {0.0f, -1.0f, 0.0f } },
+   { { 1.0f, -1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, -1.0f, 0.0f }},
+   { {-1.0f, -1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, -1.0f, 0.0f }},
  
    // Left Face
-   { {-1.0f, -1.0f, 1.0f}, {0.0f, 1.0f} },
-   { {-1.0f, 1.0f, 1.0f}, {0.0f, 0.0f} },
-   { {-1.0f, 1.0f, -1.0f}, {1.0f, 0.0f} },
-   { {-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f} },
+   { {-1.0f, -1.0f, 1.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f } },
+   { {-1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f } },
+   { {-1.0f, 1.0f, -1.0f}, {1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f } },
+   { {-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f}, {-1.0f, 0.0f, 0.0f } },
  
    // Right Face
-   { { 1.0f, -1.0f, -1.0f}, {0.0f, 1.0f} },
-   { { 1.0f, 1.0f, -1.0f}, {0.0f, 0.0f} },
-   { { 1.0f, 1.0f, 1.0f}, {1.0f, 0.0f} },
-   { { 1.0f, -1.0f, 1.0f}, {1.0f, 1.0f} },
+   { { 1.0f, -1.0f, -1.0f}, {0.0f, 1.0f}, {1.0f, 0.0f, 0.0f } },
+   { { 1.0f, 1.0f, -1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f } },
+   { { 1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f } },
+   { { 1.0f, -1.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f, 0.0f } },
  };
  
  
@@ -354,9 +356,11 @@ void Renderer::CreateInputLayout()
 {
     D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
-    mDevice->CreateInputLayout(inputElementDesc, 2, mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), mInputLayout.GetAddressOf());
+
+    mDevice->CreateInputLayout(inputElementDesc, 3, mVertexShaderBlob->GetBufferPointer(), mVertexShaderBlob->GetBufferSize(), mInputLayout.GetAddressOf());
 }
 
 void Renderer::CreateProjectionMatrix()
@@ -411,6 +415,18 @@ void Renderer::UpdateConstantBuffer(XMMATRIX OBJWorldMatrix, XMMATRIX camMat)
         0,
         0
     );
+
+    XMVECTOR det; // DirextXMath placeholder
+    ConstantBuffer cb;
+    cb.WVP = XMMatrixTranspose(wvp);
+    cb.lightColour = mLight.GetColor();
+    cb.ambientIntentsity = mLight.GetAmbientIntensity();
+    cb.LightDir = mLight.GetDirection();
+    cb.diffuseIntensity = mLight.GetDiffuseIntensity();
+    cb.world = XMMatrixTranspose(mWorld);
+    cb.normalMatrix = XMMatrixInverse(&det, mWorld);
+
+    mDeviceContext->UpdateSubresource(mConstantBuffer.Get(), 0, nullptr, &cb, 0, 0);
 }
 
 void Renderer::CreateStencilBuffer()
@@ -483,6 +499,7 @@ void Renderer::SetPipelineState()
     mDeviceContext->PSSetShader(mPixelShader.Get(), nullptr, 0);
     mDeviceContext->VSSetShader(mVertexShader.Get(), nullptr, 0);
     mDeviceContext->VSSetConstantBuffers(0, 1, mConstantBuffer.GetAddressOf());
+    mDeviceContext->PSSetConstantBuffers(0, 1, mConstantBuffer.GetAddressOf());
     mDeviceContext->IASetInputLayout(mInputLayout.Get());
 
     mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
@@ -594,7 +611,7 @@ void Renderer::RenderFrame(HWND mHWnd)
     }
 
     //----CHECK FOR VALID MOVEMENTS----
-    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //get inputs (at bottom as if above world matrices creation, can cause bug where holding inputs as pressing space to start causes player to spawn in a void)
+    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state, mLight); //get inputs (at bottom as if above world matrices creation, can cause bug where holding inputs as pressing space to start causes player to spawn in a void)
 
     ////////////////////////////////////////////////////////////
     ////////// PLAYER MOVEMENT/COLISSION MANAGER END //////////
@@ -669,7 +686,7 @@ void Renderer::RenderStartScreenUI(HWND mHWnd)
 {
     ClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
 
-    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state); //CHECK IF PLAYER WANTS TO START
+    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state, mLight); //CHECK IF PLAYER WANTS TO START
 
     // 2. Get the Back Buffer as a DXGI Surface
     IDXGISurface1* gdiSurface = nullptr;
