@@ -102,6 +102,10 @@ void InputDetector::DetectInput(PlayerCamera& cam, HWND hWnd, int ScreenSizeX, i
             {
                 if (keyboardState[DIK_SPACE] & 0x80) state = 1;
             }
+            else if (state == 2)
+            {
+                if (keyboardState[DIK_SPACE] & 0x80) PostMessage(hWnd, WM_CLOSE, 0,0);
+            }
 
             if (keyboardState[DIK_ESCAPE] & 0x80)
             {

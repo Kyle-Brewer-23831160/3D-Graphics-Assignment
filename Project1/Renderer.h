@@ -42,6 +42,7 @@ public:
 
     void RenderFrame(HWND mHWnd);                 // Clear + bind pipeline + draw + present
     void RenderStartScreenUI(HWND mHWnd);
+    void RenderEndScreenUI(HWND mHWnd);
     void ClearColor(XMFLOAT4 color);    // Optional if you want to call it manually
 
     ID3D11Device* GetDevice() const { return mDevice.Get(); }

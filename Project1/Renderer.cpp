@@ -591,6 +591,11 @@ void Renderer::RenderFrame(HWND mHWnd)
                 WorldMesh.erase(WorldMesh.begin() + i);
                 collectableCount++;
                 i--;
+
+                if (collectableCount >= 3)
+                {
+                    state = 2;
+                }
                 continue;
             }
 
@@ -705,6 +710,38 @@ void Renderer::RenderStartScreenUI(HWND mHWnd)
     TextOutA(hdc, 100, 100, Header.c_str(), Header.length());
 
     std::string StartPrompt = "PRESS SPACE TO BEGIN";
+    TextOutA(hdc, 160, 200, StartPrompt.c_str(), StartPrompt.length());
+
+    //Release the DC 
+    gdiSurface->ReleaseDC(nullptr);
+    gdiSurface->Release();
+
+    mSwapChain->Present(1, 0);
+}
+
+void Renderer::RenderEndScreenUI(HWND mHWnd)
+{
+    ClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+
+    detector.DetectInput(mCam, mHwnd, 800, 600, forward, side, state, mLight); //CHECK IF PLAYER WANTS TO START
+
+    // 2. Get the Back Buffer as a DXGI Surface
+    IDXGISurface1* gdiSurface = nullptr;
+    mSwapChain->GetBuffer(0, __uuidof(IDXGISurface1), (void**)&gdiSurface);
+
+    // 3. Get the HDC from the DXGI Surface (NOT the Window)
+    HDC hdc = GetDC(mHWnd);
+    gdiSurface->GetDC(FALSE, &hdc);
+
+    SetTextColor(hdc, RGB(255, 255, 255));
+    SetBkMode(hdc, TRANSPARENT);
+
+    HFONT TitleFont = CreateFontW(30, 15, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    SelectObject(hdc, TitleFont);
+    std::string Header = "YOU COLLECTED ALL 3 COLLECTABLES!";
+    TextOutA(hdc, 100, 100, Header.c_str(), Header.length());
+
+    std::string StartPrompt = "PRESS SPACE TO END GAME";
     TextOutA(hdc, 160, 200, StartPrompt.c_str(), StartPrompt.length());
 
     //Release the DC 

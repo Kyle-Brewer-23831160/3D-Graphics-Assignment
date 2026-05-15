@@ -67,6 +67,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
         {
             basicRenderer->RenderFrame(g_hWnd);
         }
+        else if (basicRenderer->state == 2)
+        {
+            basicRenderer->RenderEndScreenUI(g_hWnd);
+        }
     }
 
     return (int)msg.wParam; // Return the exit code
